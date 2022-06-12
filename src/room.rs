@@ -232,17 +232,17 @@ impl<'a> RoomBuilder<'a> {
     /// Create a private room with audio and video off by default:
     ///
     /// ```no_run
-    /// # use dailyco::Client;
-    /// # use dailyco::room::{RoomBuilder, RoomPrivacy};
-    /// # async fn run() {
-    /// let client = Client::new("test-api-key").unwrap();
-    /// RoomBuilder::new()
+    /// # use dailyco::{Client, Result};
+    /// # use dailyco::room::{Room, RoomBuilder, RoomPrivacy};
+    /// # async fn run() -> Result<Room> {
+    /// let client = Client::new("test-api-key")?;
+    /// let created_room = RoomBuilder::new()
     ///   .privacy(RoomPrivacy::Private)
     ///   .start_audio_off(true)
     ///   .start_video_off(true)
     ///   .create(&client)
-    ///   .await
-    ///   .expect("Should create room");
+    ///   .await?;
+    /// # Ok(created_room)
     /// # }
     /// ```
     pub async fn create(&self, client: &Client) -> crate::Result<Room> {

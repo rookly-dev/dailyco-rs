@@ -155,16 +155,16 @@ impl<'a> MeetingTokenBuilder<'a> {
     /// Create a token to join a room with owner privileges.
     ///
     /// ```no_run
-    /// # use dailyco::Client;
+    /// # use dailyco::{Client, Result};
     /// # use dailyco::meeting_token::MeetingTokenBuilder;
-    /// # async fn run() {
-    /// let client = Client::new("test-api-key").unwrap();
-    /// MeetingTokenBuilder::new()
+    /// # async fn run() -> Result<String> {
+    /// let client = Client::new("test-api-key")?;
+    /// let token = MeetingTokenBuilder::new()
     ///   .room_name("room-user-should-own")
     ///   .is_owner(true)
     ///   .create(&client)
-    ///   .await
-    ///   .expect("Should create token");
+    ///   .await?;
+    /// # Ok(token)
     /// # }
     /// ```
     pub async fn create(&self, client: &Client) -> crate::Result<String> {

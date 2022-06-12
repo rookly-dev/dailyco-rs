@@ -23,11 +23,19 @@ pub struct Client {
 impl Client {
     /// Creates a [Client](crate::Client) from an API key.
     ///
+    /// # Errors
+    ///
+    /// If the given API key does not contain only ASCII characters, an
+    /// error variant will be returned.
+    ///
     /// # Examples
     ///
     /// ```
-    /// # use dailyco::Client;
-    /// Client::new("test-api-key").expect("Should create client");
+    /// # use dailyco::{Client, Result};
+    /// # fn main_fn() -> Result<Client> {
+    /// let client = Client::new("test-api-key")?;
+    /// Ok(client)
+    /// # }
     /// ```
     pub fn new<T: fmt::Display>(key: T) -> Result<Self> {
         // We should be guaranteed this parsing will not fail
@@ -103,10 +111,13 @@ impl Client {
     ///
     /// ```no_run
     /// # use dailyco::Client;
+    /// # use dailyco::Result;
+    /// # use dailyco::room::Room;
     /// #
-    /// # async fn run() {
-    /// let client = Client::new("test-api-key").unwrap();
-    /// client.get_room("room-we-just-made").await.expect("Should get room which exists");
+    /// # async fn run() -> Result<Room> {
+    /// let client = Client::new("test-api-key")?;
+    /// let room = client.get_room("room-we-just-made").await?;
+    /// # Ok(room)
     /// # }
     /// ```
     pub async fn get_room(&self, room_name: &str) -> Result<Room> {
@@ -124,10 +135,12 @@ impl Client {
     /// # Examples
     ///
     /// ```no_run
-    /// # use dailyco::Client;
-    /// # async fn run() {
-    /// let client = Client::new("test-api-key").unwrap();
-    /// client.get_rooms().await.expect("Should get rooms for valid account");
+    /// # use dailyco::{Client, Result};
+    /// # use dailyco::room::Room;
+    /// # async fn run() -> Result<Vec<Room>> {
+    /// let client = Client::new("test-api-key")?;
+    /// let rooms = client.get_rooms().await?;
+    /// # Ok(rooms)
     /// # }
     /// ```
     pub async fn get_rooms(&self) -> Result<Vec<Room>> {
@@ -154,10 +167,11 @@ impl Client {
     /// # Examples
     ///
     /// ```no_run
-    /// # use dailyco::Client;
-    /// # async fn run() {
-    /// let client = Client::new("test-api-key").unwrap();
-    /// client.delete_room("room-that-exists").await.expect("Should delete room");
+    /// # use dailyco::{Client, Result};
+    /// # async fn run() -> Result<()> {
+    /// let client = Client::new("test-api-key")?;
+    /// client.delete_room("room-that-exists").await?;
+    /// # Ok(())
     /// # }
     /// ```
     pub async fn delete_room(&self, room_name: &str) -> Result<()> {
