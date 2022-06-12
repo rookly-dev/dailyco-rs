@@ -11,3 +11,6 @@ mod room_properties;
 pub use self::client::Client;
 pub use self::error::{DailyCoErrorInfo, DailyCoErrorKind, Error, Result};
 pub use room_properties::RoomProperties;
+
+#[cfg(doctest)]
+doc_comment::doctest!("../README.md", readme);

@@ -3,6 +3,7 @@ name = "dailyco"
 version = "0.1.0"
 edition = "2021"
 categories = ["api-bindings"]
+readme = "README.md"
 repository = "https://github.com/Gambitosorg/dailyco-rs"
 keywords = ["daily", "videochat", "api", "daily.co"]
 description = "Rust bindings for Daily REST API (videochat provider)"
@@ -21,3 +22,8 @@ thiserror = "1.0.31"
 [dev-dependencies]
 tokio = { version = "1.0", default-features = false, features = ["macros", "rt-multi-thread"] }
 dotenv = "0.15.0"
+doc-comment = "0.3"
+
+[[example]]
+name = "basic"
+path = "examples/basic.rs"
