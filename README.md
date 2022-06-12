@@ -1,5 +1,8 @@
 # dailyco
 
+[![dailyco on crates.io](https://img.shields.io/crates/v/dailyco.svg)](https://crates.io/crates/dailyco)
+[![dailyco on docs.rs](https://docs.rs/dailyco/badge.svg)](https://docs.rs/dailyco)
+
 Rust bindings to interact with the [`Daily` API](https://docs.daily.co/reference/rest-api).
 
 We aim to eventually support the entire API surface, for now this crate supports
