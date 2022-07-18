@@ -6,44 +6,44 @@ use serde::{Deserialize, Serialize};
 
 /// A `MeetingTokenBuilder` can be used to create a `Daily` meeting token for gaining
 /// access to a private room.
-#[derive(Debug, Clone, Serialize, Default)]
+#[derive(Debug, Copy, Clone, Serialize, Default)]
 pub struct MeetingTokenBuilder<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    room_name: Option<&'a str>,
+    pub(crate) room_name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    eject_at_token_exp: Option<bool>,
+    pub(crate) eject_at_token_exp: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    eject_after_elapsed: Option<i64>,
+    pub(crate) eject_after_elapsed: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    nbf: Option<i64>,
+    pub(crate) nbf: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    exp: Option<i64>,
+    pub(crate) exp: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    is_owner: Option<bool>,
+    pub(crate) is_owner: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    user_name: Option<&'a str>,
+    pub(crate) user_name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    user_id: Option<&'a str>,
+    pub(crate) user_id: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    enable_screenshare: Option<bool>,
+    pub(crate) enable_screenshare: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    start_video_off: Option<bool>,
+    pub(crate) start_video_off: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    start_audio_off: Option<bool>,
+    pub(crate) start_audio_off: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    enable_recording: Option<RecordingType>,
+    pub(crate) enable_recording: Option<RecordingType>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    enable_prejoin_ui: Option<bool>,
+    pub(crate) enable_prejoin_ui: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    enable_terse_logging: Option<bool>,
+    pub(crate) enable_terse_logging: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    start_cloud_recording: Option<bool>,
+    pub(crate) start_cloud_recording: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    close_tab_on_exit: Option<bool>,
+    pub(crate) close_tab_on_exit: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    redirect_on_meeting_exit: Option<&'a str>,
+    pub(crate) redirect_on_meeting_exit: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    lang: Option<DailyLang>,
+    pub(crate) lang: Option<DailyLang>,
 }
 
 impl<'a> MeetingTokenBuilder<'a> {
@@ -214,13 +214,13 @@ impl<'a> MeetingTokenBuilder<'a> {
     /// # }
     /// ```
     pub fn self_sign(&self, domain_id: &str, secret_key: &str) -> String {
-        crate::self_sign_token::self_sign_token(self, domain_id, secret_key)
+        crate::self_sign_token::self_sign_token(*self, domain_id, secret_key)
     }
 }
 
 /// A `MeetingToken` describes the configuration of a meeting token used to join a
 /// `Daily` private meeting room.
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize, Eq, PartialEq)]
 pub struct MeetingToken {
     /// The room for which this token is valid. If `room_name` isn't set, the token is
     /// valid for all rooms in your domain.
@@ -272,4 +272,33 @@ pub struct MeetingToken {
     pub redirect_on_meeting_exit: Option<String>,
     /// The default language of the Daily prebuilt video call UI, for this room.
     pub lang: Option<DailyLang>,
+}
+
+fn option_str_to_string(str: Option<&str>) -> Option<String> {
+    str.map(|s| s.to_string())
+}
+
+impl From<MeetingTokenBuilder<'_>> for MeetingToken {
+    fn from(builder: MeetingTokenBuilder) -> Self {
+        Self {
+            room_name: option_str_to_string(builder.room_name),
+            eject_at_token_exp: builder.eject_at_token_exp.unwrap_or_default(),
+            eject_after_elapsed: builder.eject_after_elapsed,
+            nbf: builder.nbf,
+            exp: builder.exp,
+            is_owner: builder.is_owner.unwrap_or_default(),
+            user_name: option_str_to_string(builder.user_name),
+            user_id: option_str_to_string(builder.user_id),
+            enable_screenshare: builder.enable_screenshare.unwrap_or(true),
+            start_video_off: builder.start_video_off.unwrap_or_default(),
+            start_audio_off: builder.start_audio_off.unwrap_or_default(),
+            enable_recording: builder.enable_recording,
+            enable_prejoin_ui: builder.enable_prejoin_ui,
+            enable_terse_logging: builder.enable_terse_logging.unwrap_or_default(),
+            start_cloud_recording: builder.start_cloud_recording.unwrap_or_default(),
+            close_tab_on_exit: builder.close_tab_on_exit.unwrap_or_default(),
+            redirect_on_meeting_exit: option_str_to_string(builder.redirect_on_meeting_exit),
+            lang: builder.lang,
+        }
+    }
 }
