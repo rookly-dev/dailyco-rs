@@ -22,10 +22,11 @@ impl Default for RoomPrivacy {
 }
 
 /// A `RoomBuilder` can be used to create a `Daily` room with custom configuration.
-#[serde_with::skip_serializing_none]
 #[derive(Debug, Copy, Clone, Serialize, Default)]
 pub struct RoomBuilder<'a> {
+    #[serde(skip_serializing_if = "Option::is_none")]
     name: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     privacy: Option<RoomPrivacy>,
     properties: RoomPropertiesBuilder<'a>,
 }
@@ -270,75 +271,100 @@ pub struct Room {
     pub config: RoomProperties,
 }
 
-#[serde_with::skip_serializing_none]
 #[derive(Debug, Copy, Clone, Serialize, Default)]
 struct RoomPropertiesBuilder<'a> {
     /// UTC timestamp before which the room cannot be joined
+    #[serde(skip_serializing_if = "Option::is_none")]
     nbf: Option<i64>,
     /// UTC timestamp for expiration of the room, after which
     /// time it will be automatically deleted at some point.
+    #[serde(skip_serializing_if = "Option::is_none")]
     exp: Option<i64>,
     /// Maximum number of participants who can enter the room.
+    #[serde(skip_serializing_if = "Option::is_none")]
     max_participants: Option<usize>,
     /// Determines if Daily Prebuilt displays the People UI
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_people_ui: Option<bool>,
     /// Sets whether the room can use Daily Prebuilt's Picture in Picture controls.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_pip_ui: Option<bool>,
     /// Determines whether participants enter a waiting room with a camera, mic, and
     /// browser check before joining a call.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_prejoin_ui: Option<bool>,
     /// Determines whether the network button, and the network panel it reveals on click, appears in this room.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_network_ui: Option<bool>,
     /// Turns on a lobby experience for private rooms. A participant without a corresponding
     /// meeting token can request to be admitted to the meeting with a "knock", and wait
     /// for the meeting owner to admit them.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_knocking: Option<bool>,
     /// Whether or not screen-sharing is enabled
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_screenshare: Option<bool>,
     /// Determines whether Daily Prebuilt displays background blur controls.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_video_processing_ui: Option<bool>,
     /// Allow adding chat to the call
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_chat: Option<bool>,
     /// Keep video off when room is joined
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_video_off: Option<bool>,
     /// Keep audio off when room is joined
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_audio_off: Option<bool>,
     /// In Daily Prebuilt, only the meeting owners will be able to turn on camera,
     /// unmute mic, and share screen
+    #[serde(skip_serializing_if = "Option::is_none")]
     owner_only_broadcast: Option<bool>,
     /// Allowed recording type for the room
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_recording: Option<RecordingType>,
     /// If there's a meeting going on at room exp time, end the meeting by kicking
     /// everyone out. This behavior can be overridden by setting eject properties of
     /// a meeting token.
+    #[serde(skip_serializing_if = "Option::is_none")]
     eject_at_room_exp: Option<bool>,
     /// Eject a meeting participant this many seconds after the participant joins the
     /// meeting. You can use this is a default length limit to prevent long meetings.
     /// This can be overridden by setting eject properties of a meeting token.
+    #[serde(skip_serializing_if = "Option::is_none")]
     eject_after_elapsed: Option<i64>,
     /// When enabled, non-owner users join a meeting with a hidden presence, meaning
     /// they won't appear as a named participant in the meeting and have no participant
     /// events associated to them.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_hidden_participants: Option<bool>,
     /// Configures a room to use multiple SFUs for a call's media. This feature enables
     /// calls to scale to large sizes and to reduce latency between participants.
     /// It is recommended specifically for interactive live streaming.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_mesh_sfu: Option<bool>,
     /// Enables Daily Prebuilt to support group calls of up to 300 participants and
     /// owner only broadcast calls of up to 15K participants.
+    #[serde(skip_serializing_if = "Option::is_none")]
     experimental_optimize_large_calls: Option<bool>,
     /// The default language of the Daily prebuilt video call UI, for this room.
+    #[serde(skip_serializing_if = "Option::is_none")]
     lang: Option<DailyLang>,
     /// Sets a URL that will receive a webhook when a user joins a room.
     /// Default is NULL. Character limit for webhook URL is 255.
+    #[serde(skip_serializing_if = "Option::is_none")]
     meeting_join_hook: Option<&'a str>,
     /// Sets the signaling type.
+    #[serde(skip_serializing_if = "Option::is_none")]
     signaling_imp: Option<SignalingImp>,
     /// Enforce a signaling server region
+    #[serde(skip_serializing_if = "Option::is_none")]
     geo: Option<Region>,
     /// Used to select the region where an RTMP stream should originate.
+    #[serde(skip_serializing_if = "Option::is_none")]
     rtmp_geo: Option<RtmpGeoRegion>,
     /// Reduces the volume of log messages. This feature should be enabled when there
     /// are more than 300 participants in a meeting to help improve performance.
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_terse_logging: Option<bool>,
 }

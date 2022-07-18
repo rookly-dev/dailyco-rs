@@ -1,29 +1,48 @@
 //! Definition and creation of `Daily` meeting tokens.
 use crate::configuration::{DailyLang, RecordingType};
+use crate::utils::default_as_true;
 use crate::Client;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// A `MeetingTokenBuilder` can be used to create a `Daily` meeting token for gaining
 /// access to a private room.
 #[derive(Debug, Clone, Serialize, Default)]
 pub struct MeetingTokenBuilder<'a> {
+    #[serde(skip_serializing_if = "Option::is_none")]
     room_name: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     eject_at_token_exp: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     eject_after_elapsed: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     nbf: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     exp: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     is_owner: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     user_name: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     user_id: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_screenshare: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_video_off: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_audio_off: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_recording: Option<RecordingType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_prejoin_ui: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     enable_terse_logging: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     start_cloud_recording: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     close_tab_on_exit: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     redirect_on_meeting_exit: Option<&'a str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     lang: Option<DailyLang>,
 }
 
@@ -170,4 +189,87 @@ impl<'a> MeetingTokenBuilder<'a> {
     pub async fn create(&self, client: &Client) -> crate::Result<String> {
         client.create_meeting_token(self).await
     }
+
+    #[cfg(feature = "self-signed-tokens")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "self-signed-tokens")))]
+    /// Self-sign a `Daily` meeting token corresponding to this configuration,
+    /// skipping the round-trip required by [create](#method.create).
+    ///
+    /// # Optional
+    ///
+    /// This requires the optional `self-signed-tokens` feature enabled.
+    ///
+    /// # Examples
+    ///
+    /// Create a token to join a room with owner privileges.
+    ///
+    /// ```no_run
+    /// # use dailyco::meeting_token::MeetingTokenBuilder;
+    /// # fn run() -> String {
+    /// let token = MeetingTokenBuilder::new()
+    ///   .room_name("room-user-should-own")
+    ///   .is_owner(true)
+    ///   .self_sign("domain_id", "test-api-key");
+    /// # token
+    /// # }
+    /// ```
+    pub fn self_sign(&self, domain_id: &str, secret_key: &str) -> String {
+        crate::self_sign_token::self_sign_token(self, domain_id, secret_key)
+    }
+}
+
+/// A `MeetingToken` describes the configuration of a meeting token used to join a
+/// `Daily` private meeting room.
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct MeetingToken {
+    /// The room for which this token is valid. If `room_name` isn't set, the token is
+    /// valid for all rooms in your domain.
+    pub room_name: Option<String>,
+    /// Kick this user out of the meeting at the time this meeting token expires.
+    #[serde(default)]
+    pub eject_at_token_exp: bool,
+    /// Kick this user out of the meeting this many seconds after they join the meeting.
+    pub eject_after_elapsed: Option<i64>,
+    /// UTC timestamp before which the token cannot be used.
+    pub nbf: Option<i64>,
+    /// UTC timestamp for expiration of the token.
+    pub exp: Option<i64>,
+    /// The user has meeting owner privileges.
+    #[serde(default)]
+    pub is_owner: bool,
+    /// The user's name in this meeting.
+    pub user_name: Option<String>,
+    /// The user's id for this meeting session.
+    pub user_id: Option<String>,
+    /// The user is allowed to screenshare.
+    #[serde(default = "default_as_true")]
+    pub enable_screenshare: bool,
+    /// When a participant first joins a meeting, keep their camera off.
+    #[serde(default)]
+    pub start_video_off: bool,
+    /// When a participant first joins a meeting, keep their microphone muted.
+    #[serde(default)]
+    pub start_audio_off: bool,
+    /// Allowed recording type
+    pub enable_recording: Option<RecordingType>,
+    /// Determines whether participant enters a waiting room with a camera, mic, and
+    /// browser check before joining a call.
+    pub enable_prejoin_ui: Option<bool>,
+    /// Reduces the volume of log messages. This feature should be enabled when there
+    /// are more than 300 participants in a meeting to help improve performance.
+    #[serde(default)]
+    pub enable_terse_logging: bool,
+    /// Start cloud recording when the user joins the room. This can be used to always record and
+    /// archive meetings, for example in a customer support context.
+    #[serde(default)]
+    pub start_cloud_recording: bool,
+    /// When a user leaves a meeting using the button in the in-call menu bar,
+    /// the browser tab closes.
+    #[serde(default)]
+    pub close_tab_on_exit: bool,
+    /// When a user leaves a meeting using the button in the in-call menu bar,
+    /// the browser loads this URL.
+    pub redirect_on_meeting_exit: Option<String>,
+    /// The default language of the Daily prebuilt video call UI, for this room.
+    pub lang: Option<DailyLang>,
 }

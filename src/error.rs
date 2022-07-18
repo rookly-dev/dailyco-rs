@@ -81,8 +81,13 @@ pub struct DailyCoErrorInfo {
 
 impl std::fmt::Display for DailyCoErrorInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        // Shouldn't hit any possible failure conditions
-        let disp = serde_json::to_string_pretty(&self).unwrap();
-        write!(f, "{}", disp)
+        if let Some(error_kind) = self.error {
+            write!(f, "Error: {}", error_kind)?;
+        }
+        if let Some(info) = &self.info {
+            write!(f, "Info: {}", info)
+        } else {
+            write!(f, "Info: Unspecified")
+        }
     }
 }

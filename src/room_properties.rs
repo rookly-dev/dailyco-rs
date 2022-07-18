@@ -1,9 +1,6 @@
 use crate::configuration::{DailyLang, RecordingType, Region, RtmpGeoRegion, SignalingImp};
+use crate::utils::default_as_true;
 use serde::Deserialize;
-
-const fn default_as_true() -> bool {
-    true
-}
 
 /// Properties for a `Daily` room, defined [here](https://docs.daily.co/reference/rest-api/rooms/config).
 /// Following the API docs, fields not found in a request are assumed to have their
