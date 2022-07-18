@@ -1,10 +1,20 @@
-use dailyco::meeting_token::MeetingTokenBuilder;
+use dailyco::meeting_token::{MeetingToken, MeetingTokenBuilder};
 use dailyco::room::{RoomBuilder, RoomPrivacy};
 use dailyco::{Client, DailyCoErrorKind, Error};
 
+fn get_secret_key_for_tests() -> String {
+    std::env::var("DAILY_CO_API_KEY").expect("Requires Daily API KEY")
+}
+
+#[cfg(feature = "self-signed-tokens")]
+fn get_domain_id_for_tests() -> String {
+    std::env::var("DAILY_CO_DOMAIN_ID")
+        .expect("Daily Domain Id required for testing self-signing meeting tokens")
+}
+
 fn get_daily_client() -> Client {
     dotenv::dotenv().unwrap();
-    let key = std::env::var("DAILY_CO_API_KEY").expect("Requires Daily API KEY");
+    let key = get_secret_key_for_tests();
     Client::new(key).expect("Should make client")
 }
 
@@ -116,4 +126,55 @@ async fn get_meeting_token() {
         .create(&client)
         .await
         .unwrap();
+}
+
+macro_rules! meeting_token {
+    ( $( $field:ident = $value:expr ),* ) => {{
+        let mut builder = MeetingTokenBuilder::new();
+        $(
+            builder.$field($value);
+        )*
+        builder
+    }};
+}
+
+fn get_meeting_token_test_cases() -> Vec<MeetingTokenBuilder<'static>> {
+    vec![
+        meeting_token! { room_name = "hi", start_audio_off = true, user_name = "a_user", eject_after_elapsed = 50 },
+        todo!(),
+    ]
+}
+
+#[tokio::test]
+async fn meeting_tokens_roundtrip() -> anyhow::Result<()> {
+    let tokens = get_meeting_token_test_cases();
+    let client = get_daily_client();
+    for spec in tokens {
+        assert_meeting_token_generation_roundtrip(&client, spec).await?;
+    }
+    Ok(())
+}
+
+async fn assert_meeting_token_generation_roundtrip(
+    client: &Client,
+    builder: MeetingTokenBuilder<'_>,
+) -> anyhow::Result<()> {
+    let token_fetch = builder.create(&client).await?;
+
+    let returned = client.get_meeting_token(&token_fetch).await?;
+    assert_builder_matches_retrieved(&builder, &returned);
+
+    #[cfg(feature = "self-signed-tokens")]
+    {
+        let secret_key = get_secret_key_for_tests();
+        let domain_id = get_domain_id_for_tests();
+        let token_signed = builder.self_sign(&domain_id, &secret_key);
+        let returned = client.get_meeting_token(&token_signed).await?;
+        assert_builder_matches_retrieved(&builder, &returned);
+    }
+    Ok(())
+}
+
+fn assert_builder_matches_retrieved(_expected: &MeetingTokenBuilder, _result: &MeetingToken) {
+    todo!()
 }

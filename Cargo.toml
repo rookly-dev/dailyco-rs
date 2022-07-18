@@ -25,6 +25,7 @@ self-signed-tokens = ["jsonwebtoken"]
 
 [dev-dependencies]
 tokio = { version = "1.0", default-features = false, features = ["macros", "rt-multi-thread"] }
+anyhow = "1"
 dotenv = "0.15.0"
 doc-comment = "0.3"
 
