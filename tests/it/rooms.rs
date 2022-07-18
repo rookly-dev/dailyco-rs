@@ -1,32 +1,7 @@
+use crate::helpers::{delete_room_if_exists, ensure_room, get_daily_client};
 use dailyco::meeting_token::MeetingTokenBuilder;
 use dailyco::room::{RoomBuilder, RoomPrivacy};
-use dailyco::{Client, DailyCoErrorKind, Error};
-
-fn get_daily_client() -> Client {
-    dotenv::dotenv().unwrap();
-    let key = std::env::var("DAILY_CO_API_KEY").expect("Requires Daily API KEY");
-    Client::new(key).expect("Should make client")
-}
-
-async fn delete_room_if_exists(client: &Client, room_name: &str) {
-    if let Err(err) = client.delete_room(room_name).await {
-        match err {
-            Error::APIError(api_err) => {
-                assert!(matches!(api_err.error.unwrap(), DailyCoErrorKind::NotFound))
-            }
-            _ => panic!("Unexpected error"),
-        }
-    }
-}
-
-async fn ensure_room(client: &Client, room_name: &str) {
-    delete_room_if_exists(client, room_name).await;
-    RoomBuilder::new()
-        .name(room_name)
-        .create(client)
-        .await
-        .unwrap();
-}
+use dailyco::{DailyCoErrorKind, Error};
 
 #[tokio::test]
 async fn can_make_room() {
@@ -106,7 +81,7 @@ async fn get_rooms() {
 }
 
 #[tokio::test]
-async fn get_meeting_token() {
+async fn make_meeting_token() {
     let client = get_daily_client();
     let room_name = "meeting-token-room";
     ensure_room(&client, room_name).await;

@@ -5,7 +5,7 @@ use reqwest::{Response, Url};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-use crate::meeting_token::MeetingTokenBuilder;
+use crate::meeting_token::{MeetingToken, MeetingTokenBuilder};
 use crate::room::{Room, RoomBuilder};
 use crate::{Error, Result};
 
@@ -122,6 +122,38 @@ impl Client {
     /// ```
     pub async fn get_room(&self, room_name: &str) -> Result<Room> {
         let url = self.get_room_url_with_name(room_name);
+        let resp = self.reqwest_client.get(url).send().await?;
+
+        parse_dailyco_response(resp).await
+    }
+
+    /// Validate and retrieve configuration information for the provided meeting token.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use dailyco::{Client, Result};
+    /// # use dailyco::room::Room;
+    /// # use dailyco::meeting_token::MeetingTokenBuilder;
+    /// #
+    /// # async fn run() -> Result<()> {
+    /// let client = Client::new("test-api-key")?;
+    /// let token = MeetingTokenBuilder::new()
+    ///   .room_name("room-which-exists")
+    ///   .create(&client)
+    ///   .await?;
+    /// let validated = client.get_meeting_token(&token).await?;
+    /// assert_eq!(validated.room_name, Some("room-which-exists".to_string()));
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn get_meeting_token(&self, token: &str) -> Result<MeetingToken> {
+        let url = self
+            .base_url
+            .join("meeting-tokens/")
+            .unwrap()
+            .join(token)
+            .unwrap();
         let resp = self.reqwest_client.get(url).send().await?;
 
         parse_dailyco_response(resp).await

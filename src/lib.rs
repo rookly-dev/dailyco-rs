@@ -8,6 +8,11 @@ pub mod meeting_token;
 pub mod room;
 mod room_properties;
 
+#[cfg(feature = "self-signed-tokens")]
+mod self_sign_token;
+
+mod utils;
+
 pub use self::client::Client;
 pub use self::error::{DailyCoErrorInfo, DailyCoErrorKind, Error, Result};
 pub use room_properties::RoomProperties;

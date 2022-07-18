@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Signaling server region for hosting a call
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum Region {
@@ -30,7 +30,7 @@ pub enum Region {
 }
 
 /// Used to select the region where an RTMP stream should originate.
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum RtmpGeoRegion {
@@ -43,7 +43,7 @@ pub enum RtmpGeoRegion {
 }
 
 /// Options for the default language of a Daily room
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 #[allow(missing_docs)]
@@ -76,7 +76,7 @@ impl Default for DailyLang {
 
 /// Options for a recording type, details provided
 /// [here](https://docs.daily.co/reference/rest-api/rooms/config#enable_recording)
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
 pub enum RecordingType {
@@ -91,7 +91,7 @@ pub enum RecordingType {
 }
 
 /// Signaling type, seen in <https://docs.daily.co/reference/rest-api/rooms/config#signaling_imp>
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum SignalingImp {
