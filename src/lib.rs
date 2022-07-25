@@ -1,5 +1,6 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //! This crate provides Rust bindings to interact with the [`Daily` API](https://docs.daily.co/reference/rest-api).
 mod client;
 pub mod configuration;
