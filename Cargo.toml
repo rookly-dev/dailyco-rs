@@ -1,6 +1,6 @@
 [package]
 name = "dailyco"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 categories = ["api-bindings"]
 readme = "README.md"
@@ -10,7 +10,9 @@ description = "Rust bindings for Daily REST API (videochat provider)"
 authors = ["Matthew Zeitlin <matt@gambitos.com>"]
 license = "MIT OR Apache-2.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 reqwest = {version = "0.11", features = ["json"]}

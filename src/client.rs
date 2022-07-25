@@ -40,7 +40,23 @@ impl Client {
     pub fn new<T: fmt::Display>(key: T) -> Result<Self> {
         // We should be guaranteed this parsing will not fail
         let base_url = Url::parse(BASE_URL).unwrap();
+        Self::with_endpoint(key, base_url)
+    }
 
+    /// Creates a [Client](crate::Client) with a custom endpoint. This is primarily
+    /// intended for testing purposes - for example pointing API requests to a [wiremock server](https://github.com/LukeMathWalker/wiremock-rs).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use dailyco::{Client, Result};
+    /// # fn main_fn() -> Result<Client> {
+    /// let mock_server_addr = "http://localhost:8080";
+    /// let client = Client::with_endpoint("test-api-key", reqwest::Url::parse(mock_server_addr).unwrap())?;
+    /// Ok(client)
+    /// # }
+    /// ```
+    pub fn with_endpoint<T: fmt::Display>(key: T, endpoint: Url) -> Result<Self> {
         let mut header_val = HeaderValue::from_str(format!("Bearer {}", key).as_str())
             .map_err(|_| Error::BadAPIKey("API key must include only ASCII characters"))?;
         header_val.set_sensitive(true);
@@ -52,7 +68,7 @@ impl Client {
             .build()?;
         Ok(Self {
             reqwest_client: client,
-            base_url,
+            base_url: endpoint,
         })
     }
 }
