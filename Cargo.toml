@@ -1,13 +1,13 @@
 [package]
 name = "dailyco"
-version = "0.2.2"
+version = "0.3.0"
 edition = "2021"
 categories = ["api-bindings"]
 readme = "README.md"
-repository = "https://github.com/Gambitosorg/dailyco-rs"
+repository = "https://github.com/rookly-dev/dailyco-rs"
 keywords = ["daily", "videochat", "api", "dailyco"]
 description = "Rust bindings for Daily REST API (videochat provider)"
-authors = ["Matthew Zeitlin <matt@gambitos.com>"]
+authors = ["Matthew Zeitlin <matt@rookly.com>"]
 license = "MIT OR Apache-2.0"
 
 [package.metadata.docs.rs]
@@ -18,7 +18,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 reqwest = {version = "0.11", features = ["json"]}
 serde = { version = "1", features = ["derive"]}
 thiserror = "1.0.31"
-jsonwebtoken = {version = "8", optional = true}
+jsonwebtoken = {version = "8", optional = true, default-features = false}
 
 [features]
 
