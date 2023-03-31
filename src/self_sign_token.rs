@@ -30,55 +30,41 @@ pub fn self_sign_token(config: MeetingTokenBuilder, domain_id: &str, secret_key:
 // could be cleaner with a proc macro
 #[derive(serde::Serialize, Copy, Clone)]
 struct MeetingTokenBuilderRenamed<'a> {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "r")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "r")]
     room_name: Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ejt")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "ejt")]
     eject_at_token_exp: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "eje")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "eje")]
     eject_after_elapsed: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     nbf: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     exp: Option<i64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "o")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "o")]
     is_owner: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "u")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "u")]
     user_name: Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ud")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "ud")]
     user_id: Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ss")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "ss")]
     enable_screenshare: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "vo")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "vo")]
     start_video_off: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ao")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "ao")]
     start_audio_off: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "er")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "er")]
     enable_recording: Option<RecordingType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     enable_prejoin_ui: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     enable_terse_logging: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "sr")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "sr")]
     start_cloud_recording: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "ctoe")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "ctoe")]
     close_tab_on_exit: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "rome")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "rome")]
     redirect_on_meeting_exit: Option<&'a str>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename = "uil")]
+    #[serde(skip_serializing_if = "Option::is_none", rename = "uil")]
     lang: Option<DailyLang>,
 }
 
