@@ -1,4 +1,4 @@
-use std::fmt::Formatter;
+use std::fmt::{Formatter};
 
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
@@ -66,7 +66,7 @@ impl std::fmt::Display for DailyCoErrorKind {
             Self::ServerError => "server-error",
             Self::NotFound => "not-found",
         };
-        write!(f, "{}", disp)
+        f.write_str(disp)
     }
 }
 
@@ -87,7 +87,7 @@ impl std::fmt::Display for DailyCoErrorInfo {
         if let Some(info) = &self.info {
             write!(f, "Info: {}", info)
         } else {
-            write!(f, "Info: Unspecified")
+            f.write_str("Info: Unspecified")
         }
     }
 }
