@@ -1,13 +1,14 @@
 //! Definition and creation of `Daily` meeting tokens.
+use crate::client::parse_dailyco_response;
 use crate::configuration::{DailyLang, RecordingType};
 use crate::utils::default_as_true;
 use crate::Client;
 use serde::{Deserialize, Serialize};
 
-/// A `MeetingTokenBuilder` can be used to create a `Daily` meeting token for gaining
+/// A `CreateMeetingToken` can be used to create a `Daily` meeting token for gaining
 /// access to a private room.
 #[derive(Debug, Copy, Clone, Serialize, Default)]
-pub struct MeetingTokenBuilder<'a> {
+pub struct CreateMeetingToken<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) room_name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,8 +47,8 @@ pub struct MeetingTokenBuilder<'a> {
     pub(crate) lang: Option<DailyLang>,
 }
 
-impl<'a> MeetingTokenBuilder<'a> {
-    /// Constructs a new `MeetingTokenBuilder`.
+impl<'a> CreateMeetingToken<'a> {
+    /// Constructs a new `CreateMeetingToken`.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -175,19 +176,38 @@ impl<'a> MeetingTokenBuilder<'a> {
     ///
     /// ```no_run
     /// # use dailyco::{Client, Result};
-    /// # use dailyco::meeting_token::MeetingTokenBuilder;
+    /// # use dailyco::meeting_token::CreateMeetingToken;
     /// # async fn run() -> Result<String> {
     /// let client = Client::new("test-api-key")?;
-    /// let token = MeetingTokenBuilder::new()
+    /// let token = CreateMeetingToken::new()
     ///   .room_name("room-user-should-own")
     ///   .is_owner(true)
-    ///   .create(&client)
+    ///   .send(&client)
     ///   .await?;
     /// # Ok(token)
     /// # }
     /// ```
-    pub async fn create(&self, client: &Client) -> crate::Result<String> {
-        client.create_meeting_token(self).await
+    pub async fn send(&self, client: &Client) -> crate::Result<String> {
+        #[derive(Deserialize)]
+        /// Response from Daily for successful meeting token creation
+        struct MeetingTokenResponse {
+            /// The token created
+            token: String,
+        }
+
+        #[derive(Serialize)]
+        struct MeetingTokenBody<'a> {
+            properties: &'a CreateMeetingToken<'a>,
+        }
+
+        // This should not be able to fail
+        let token_url = client.base_url.join("meeting-tokens/").unwrap();
+        let body = MeetingTokenBody { properties: self };
+        let resp = client.client.post(token_url).json(&body).send().await?;
+
+        parse_dailyco_response(resp)
+            .await
+            .map(|token_resp: MeetingTokenResponse| token_resp.token)
     }
 
     #[cfg(feature = "self-signed-tokens")]
@@ -204,9 +224,9 @@ impl<'a> MeetingTokenBuilder<'a> {
     /// Create a token to join a room with owner privileges.
     ///
     /// ```no_run
-    /// # use dailyco::meeting_token::MeetingTokenBuilder;
+    /// # use dailyco::meeting_token::CreateMeetingToken;
     /// # fn run() -> String {
-    /// let token = MeetingTokenBuilder::new()
+    /// let token = CreateMeetingToken::new()
     ///   .room_name("room-user-should-own")
     ///   .is_owner(true)
     ///   .self_sign("domain_id", "test-api-key");
@@ -278,8 +298,8 @@ fn option_str_to_string(str: Option<&str>) -> Option<String> {
     str.map(|s| s.to_string())
 }
 
-impl From<MeetingTokenBuilder<'_>> for MeetingToken {
-    fn from(builder: MeetingTokenBuilder) -> Self {
+impl From<CreateMeetingToken<'_>> for MeetingToken {
+    fn from(builder: CreateMeetingToken) -> Self {
         Self {
             room_name: option_str_to_string(builder.room_name),
             eject_at_token_exp: builder.eject_at_token_exp.unwrap_or_default(),

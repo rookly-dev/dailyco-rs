@@ -18,29 +18,29 @@ this example you will need to make an account with [Daily](https://www.daily.co/
 generate a valid API key.
 
 ```rust,no_run
-use dailyco::meeting_token::MeetingTokenBuilder;
-use dailyco::room::{RoomBuilder, RoomPrivacy};
+use dailyco::meeting_token::CreateMeetingToken;
+use dailyco::room::{CreateRoom, RoomPrivacy};
 
 #[tokio::main]
 async fn main() -> dailyco::Result<()> {
     let client = dailyco::Client::new("test-api-key")?;
 
     // Make a customized room
-    let created_room = RoomBuilder::new()
+    let created_room = CreateRoom::new()
         .name("my-test-room")
         .privacy(RoomPrivacy::Private)
         .enable_screenshare(false)
         .max_participants(20)
         .start_audio_off(true)
-        .create(&client)
+        .send(&client)
         .await?;
 
     // Since it is a private room, we will need a meeting token to join it! Let's give
     // ourselves owner privileges while we're at it.
-    let _meeting_token = MeetingTokenBuilder::new()
+    let _meeting_token = CreateMeetingToken::new()
         .room_name(&created_room.name)
         .is_owner(true)
-        .create(&client)
+        .send(&client)
         .await?;
     Ok(())
 }
