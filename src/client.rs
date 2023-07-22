@@ -3,21 +3,21 @@ use std::fmt;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, Url};
 use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use uuid::Uuid;
 
-use crate::meeting_token::{MeetingToken, MeetingTokenBuilder};
-use crate::room::{Room, RoomBuilder};
+use crate::meeting_token::MeetingToken;
+use crate::recording::RecordingObject;
+use crate::room::Room;
 use crate::{Error, Result};
 
 const BASE_URL: &str = "https://api.daily.co/v1/";
 
-/// A `Client` to make `Daily` API requests with. This is just a wrapper around a
-/// `reqwest::Client`, so it can be treated the same way with respect to handling
-/// concurrent use.
+/// A `Client` to make `Daily` API requests with.
 #[derive(Debug, Clone)]
 pub struct Client {
-    reqwest_client: reqwest::Client,
-    base_url: Url,
+    pub(crate) client: reqwest::Client,
+    pub(crate) base_url: Url,
 }
 
 impl Client {
@@ -67,60 +67,13 @@ impl Client {
             .default_headers(headers)
             .build()?;
         Ok(Self {
-            reqwest_client: client,
+            client,
             base_url: endpoint,
         })
     }
 }
 
 impl Client {
-    /// Create a room with the given configuration. Returns the daily.co room object
-    /// if successful.
-    pub(crate) async fn create_room(&self, builder: &RoomBuilder<'_>) -> Result<Room> {
-        // This should not be able to fail
-        let room_url = self.base_url.join("rooms/").unwrap();
-        let resp = self
-            .reqwest_client
-            .post(room_url)
-            .json(builder)
-            .send()
-            .await?;
-
-        parse_dailyco_response(resp).await
-    }
-
-    /// Create a meeting token with the given configuration.
-    pub(crate) async fn create_meeting_token(
-        &self,
-        config: &MeetingTokenBuilder<'_>,
-    ) -> Result<String> {
-        #[derive(Deserialize)]
-        /// Response from Daily for successful meeting token creation
-        struct MeetingTokenResponse {
-            /// The token created
-            token: String,
-        }
-
-        #[derive(Serialize)]
-        struct MeetingTokenBody<'a> {
-            properties: &'a MeetingTokenBuilder<'a>,
-        }
-
-        // This should not be able to fail
-        let token_url = self.base_url.join("meeting-tokens/").unwrap();
-        let body = MeetingTokenBody { properties: config };
-        let resp = self
-            .reqwest_client
-            .post(token_url)
-            .json(&body)
-            .send()
-            .await?;
-
-        parse_dailyco_response(resp)
-            .await
-            .map(|token_resp: MeetingTokenResponse| token_resp.token)
-    }
-
     /// Retrieve the `Daily` room corresponding to this name.
     ///
     /// # Examples
@@ -138,7 +91,7 @@ impl Client {
     /// ```
     pub async fn get_room(&self, room_name: &str) -> Result<Room> {
         let url = self.get_room_url_with_name(room_name);
-        let resp = self.reqwest_client.get(url).send().await?;
+        let resp = self.client.get(url).send().await?;
 
         parse_dailyco_response(resp).await
     }
@@ -150,13 +103,13 @@ impl Client {
     /// ```no_run
     /// # use dailyco::{Client, Result};
     /// # use dailyco::room::Room;
-    /// # use dailyco::meeting_token::MeetingTokenBuilder;
+    /// # use dailyco::meeting_token::{CreateMeetingToken};
     /// #
     /// # async fn run() -> Result<()> {
     /// let client = Client::new("test-api-key")?;
-    /// let token = MeetingTokenBuilder::new()
+    /// let token = CreateMeetingToken::new()
     ///   .room_name("room-which-exists")
-    ///   .create(&client)
+    ///   .send(&client)
     ///   .await?;
     /// let validated = client.get_meeting_token(&token).await?;
     /// assert_eq!(validated.room_name, Some("room-which-exists".to_string()));
@@ -170,7 +123,7 @@ impl Client {
             .unwrap()
             .join(token)
             .unwrap();
-        let resp = self.reqwest_client.get(url).send().await?;
+        let resp = self.client.get(url).send().await?;
 
         parse_dailyco_response(resp).await
     }
@@ -199,12 +152,35 @@ impl Client {
         }
 
         let url = self.base_url.join("rooms/").unwrap();
-        let resp = self.reqwest_client.get(url).send().await?;
+        let resp = self.client.get(url).send().await?;
         let data: GetRoomsResponse = parse_dailyco_response(resp).await?;
         if data.total_count >= 100 {
             Err(Error::RequiresPagination)
         } else {
             Ok(data.data)
+        }
+    }
+
+    /// Get information about a specific recording.
+    ///
+    /// <https://docs.daily.co/reference/rest-api/recordings/get-recording-information>
+    pub async fn get_recording(&self, id: Uuid) -> Result<RecordingObject> {
+        let url = format!("{}/recordings/{id}", self.base_url);
+        let resp = self.client.get(url).send().await?;
+        let data: RecordingObject = parse_dailyco_response(resp).await?;
+        Ok(data)
+    }
+
+    /// Delete a specific recording
+    ///
+    /// <https://docs.daily.co/reference/rest-api/recordings/delete-recording>
+    pub async fn delete_recording(&self, id: Uuid) -> Result<()> {
+        let url = format!("{}/recordings/{id}", self.base_url);
+        let resp = self.client.delete(url).send().await?;
+        if resp.status().is_success() {
+            Ok(())
+        } else {
+            Err(Error::from_failed_daily_request(resp).await)
         }
     }
 
@@ -224,7 +200,7 @@ impl Client {
     /// ```
     pub async fn delete_room(&self, room_name: &str) -> Result<()> {
         let url = self.get_room_url_with_name(room_name);
-        let resp = self.reqwest_client.delete(url).send().await?;
+        let resp = self.client.delete(url).send().await?;
 
         if resp.status().is_success() {
             Ok(())
@@ -243,7 +219,7 @@ impl Client {
     }
 }
 
-async fn parse_dailyco_response<T: DeserializeOwned>(resp: Response) -> Result<T> {
+pub async fn parse_dailyco_response<T: DeserializeOwned>(resp: Response) -> Result<T> {
     if resp.status().is_success() {
         Ok(resp.json().await?)
     } else {

@@ -1,4 +1,5 @@
 //! Definition and creation of `Daily` rooms.
+use crate::client::parse_dailyco_response;
 use crate::configuration::{DailyLang, RecordingType, Region, RtmpGeoRegion, SignalingImp};
 use crate::room_properties::RoomProperties;
 use crate::Client;
@@ -21,9 +22,9 @@ impl Default for RoomPrivacy {
     }
 }
 
-/// A `RoomBuilder` can be used to create a `Daily` room with custom configuration.
+/// A `CreateRoom` can be used to create a `Daily` room with custom configuration.
 #[derive(Debug, Copy, Clone, Serialize, Default)]
-pub struct RoomBuilder<'a> {
+pub struct CreateRoom<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -31,8 +32,8 @@ pub struct RoomBuilder<'a> {
     properties: RoomPropertiesBuilder<'a>,
 }
 
-impl<'a> RoomBuilder<'a> {
-    /// Constructs a new `RoomBuilder`.
+impl<'a> CreateRoom<'a> {
+    /// Constructs a new `CreateRoom`.
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -234,20 +235,23 @@ impl<'a> RoomBuilder<'a> {
     ///
     /// ```no_run
     /// # use dailyco::{Client, Result};
-    /// # use dailyco::room::{Room, RoomBuilder, RoomPrivacy};
+    /// # use dailyco::room::{Room, CreateRoom, RoomPrivacy};
     /// # async fn run() -> Result<Room> {
     /// let client = Client::new("test-api-key")?;
-    /// let created_room = RoomBuilder::new()
+    /// let created_room = CreateRoom::new()
     ///   .privacy(RoomPrivacy::Private)
     ///   .start_audio_off(true)
     ///   .start_video_off(true)
-    ///   .create(&client)
+    ///   .send(&client)
     ///   .await?;
     /// # Ok(created_room)
     /// # }
     /// ```
-    pub async fn create(&self, client: &Client) -> crate::Result<Room> {
-        client.create_room(self).await
+    pub async fn send(&self, client: &Client) -> crate::Result<Room> {
+        // This should not be able to fail
+        let room_url = client.base_url.join("rooms/").unwrap();
+        let resp = client.client.post(room_url).json(self).send().await?;
+        parse_dailyco_response(resp).await
     }
 }
 

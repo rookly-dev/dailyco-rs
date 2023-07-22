@@ -12,6 +12,7 @@ mod room_properties;
 #[cfg(feature = "self-signed-tokens")]
 mod self_sign_token;
 
+pub mod recording;
 mod utils;
 
 pub use self::client::Client;

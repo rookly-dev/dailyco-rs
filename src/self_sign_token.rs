@@ -1,5 +1,5 @@
 use crate::configuration::{DailyLang, RecordingType};
-use crate::meeting_token::MeetingTokenBuilder;
+use crate::meeting_token::CreateMeetingToken;
 use jsonwebtoken::{encode, EncodingKey, Header};
 
 #[derive(serde::Serialize)]
@@ -7,10 +7,10 @@ struct SelfSigningTokenPayload<'a> {
     // Domain id
     d: &'a str,
     #[serde(flatten)]
-    rest: MeetingTokenBuilderRenamed<'a>,
+    rest: MeetingTokenRenamed<'a>,
 }
 
-pub fn self_sign_token(config: MeetingTokenBuilder, domain_id: &str, secret_key: &str) -> String {
+pub fn self_sign_token(config: CreateMeetingToken, domain_id: &str, secret_key: &str) -> String {
     let payload = SelfSigningTokenPayload {
         d: domain_id,
         rest: config.into(),
@@ -29,7 +29,7 @@ pub fn self_sign_token(config: MeetingTokenBuilder, domain_id: &str, secret_key:
 // essentially need to rename struct in 2 different ways. Definitely
 // could be cleaner with a proc macro
 #[derive(serde::Serialize, Copy, Clone)]
-struct MeetingTokenBuilderRenamed<'a> {
+struct MeetingTokenRenamed<'a> {
     #[serde(skip_serializing_if = "Option::is_none", rename = "r")]
     room_name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none", rename = "ejt")]
@@ -69,8 +69,8 @@ struct MeetingTokenBuilderRenamed<'a> {
 }
 
 // Same as comment above with respect to duplication here being not great
-impl<'a> From<MeetingTokenBuilder<'a>> for MeetingTokenBuilderRenamed<'a> {
-    fn from(b: MeetingTokenBuilder<'a>) -> Self {
+impl<'a> From<CreateMeetingToken<'a>> for MeetingTokenRenamed<'a> {
+    fn from(b: CreateMeetingToken<'a>) -> Self {
         Self {
             room_name: b.room_name,
             eject_at_token_exp: b.eject_at_token_exp,

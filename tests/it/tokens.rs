@@ -1,5 +1,5 @@
 use crate::helpers::get_daily_client;
-use dailyco::meeting_token::{MeetingToken, MeetingTokenBuilder};
+use dailyco::meeting_token::{CreateMeetingToken, MeetingToken};
 use dailyco::Client;
 
 #[cfg(feature = "self-signed-tokens")]
@@ -10,7 +10,7 @@ pub fn get_domain_id_for_tests() -> String {
 
 macro_rules! meeting_token {
     ( $( $field:ident = $value:expr ),* ) => {{
-        let mut builder = MeetingTokenBuilder::new();
+        let mut builder = CreateMeetingToken::new();
         $(
             builder.$field($value);
         )*
@@ -18,7 +18,7 @@ macro_rules! meeting_token {
     }};
 }
 
-fn get_meeting_token_test_cases(room_name: &str) -> Vec<MeetingTokenBuilder> {
+fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken> {
     let mut builders = vec![
         meeting_token! { start_audio_off = true, user_name = "a_user", eject_after_elapsed = 50 },
         meeting_token! {
@@ -49,8 +49,8 @@ async fn meeting_tokens_create_roundtrip() -> anyhow::Result<()> {
     let tokens = get_meeting_token_test_cases("a-room");
     let client = get_daily_client();
     for spec in tokens {
-        let token_fetch = spec.create(&client).await?;
-        assert_meeting_token_generation_roundtrip(&client, &token_fetch, spec.clone()).await?;
+        let token_fetch = spec.send(&client).await?;
+        assert_meeting_token_generation_roundtrip(&client, &token_fetch, spec).await?;
     }
     Ok(())
 }
@@ -72,14 +72,14 @@ async fn meeting_tokens_self_sign_roundtrip() -> anyhow::Result<()> {
 async fn assert_meeting_token_generation_roundtrip(
     client: &Client,
     token: &str,
-    builder: MeetingTokenBuilder<'_>,
+    builder: CreateMeetingToken<'_>,
 ) -> anyhow::Result<()> {
     let returned = client.get_meeting_token(token).await?;
     assert_builder_matches_retrieved(builder, returned);
     Ok(())
 }
 
-fn assert_builder_matches_retrieved(expected: MeetingTokenBuilder, result: MeetingToken) {
+fn assert_builder_matches_retrieved(expected: CreateMeetingToken, result: MeetingToken) {
     let expected: MeetingToken = expected.into();
     assert_eq!(expected, result);
 }
