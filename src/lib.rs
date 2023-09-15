@@ -15,9 +15,10 @@ mod self_sign_token;
 pub mod recording;
 mod utils;
 
+pub use room_properties::{RoomProperties, RoomPropertiesBuilder};
+
 pub use self::client::Client;
 pub use self::error::{DailyCoErrorInfo, DailyCoErrorKind, Error, Result};
-pub use room_properties::RoomProperties;
 
 #[cfg(doctest)]
 doc_comment::doctest!("../README.md", readme);

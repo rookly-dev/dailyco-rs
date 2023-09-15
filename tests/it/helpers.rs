@@ -1,9 +1,19 @@
-use dailyco::room::CreateRoom;
-use dailyco::{Client, DailyCoErrorKind, Error};
 use std::fmt::Debug;
 
+use dailyco::room::{CreateRoom, Room};
+use dailyco::{Client, DailyCoErrorKind, Error};
+
 pub fn get_secret_key_for_tests() -> String {
-    std::env::var("DAILY_CO_API_KEY").expect("Requires Daily API KEY")
+    dotenv::dotenv().unwrap();
+    std::env::var("TEST_API_KEY")
+        .expect("Requires a Daily API KEY for testing to be set in `TEST_API_KEY`")
+}
+
+#[cfg(feature = "self-signed-tokens")]
+pub fn get_domain_id_for_tests() -> String {
+    dotenv::dotenv().unwrap();
+    std::env::var("TEST_DOMAIN_ID")
+        .expect("Daily Domain Id required for testing self-signing meeting tokens")
 }
 
 pub fn assert_not_found_err<T: Debug>(resp: dailyco::Result<T>) {
@@ -14,32 +24,22 @@ pub fn assert_not_found_err<T: Debug>(resp: dailyco::Result<T>) {
                 DailyCoErrorKind::NotFound
             ))
         }
-        err => panic!("Expected not found error, found {err}"),
+        err => panic!("Expected not found error, found {}", err),
     }
 }
 
 pub fn get_daily_client() -> Client {
-    dotenv::dotenv().unwrap();
     let key = get_secret_key_for_tests();
     Client::new(key).expect("Should make client")
 }
 
-pub async fn delete_room_if_exists(client: &Client, room_name: &str) {
-    if let Err(err) = client.delete_room(room_name).await {
-        match err {
-            Error::APIError(api_err) => {
-                assert!(matches!(api_err.error.unwrap(), DailyCoErrorKind::NotFound))
-            }
-            _ => panic!("Unexpected error"),
-        }
-    }
+pub async fn cleanup_room(client: &Client, room_name: &str) {
+    client
+        .delete_room(room_name)
+        .await
+        .expect("Could not delete room");
 }
 
-pub async fn ensure_room(client: &Client, room_name: &str) {
-    delete_room_if_exists(client, room_name).await;
-    CreateRoom::new()
-        .name(room_name)
-        .send(client)
-        .await
-        .unwrap();
+pub async fn create_default_room(client: &Client) -> Room {
+    CreateRoom::new().send(client).await.unwrap()
 }

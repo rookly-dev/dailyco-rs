@@ -1,8 +1,9 @@
 //! Functionality related to `Daily` recordings.
-use crate::client::parse_dailyco_response;
-use crate::Client;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use crate::client::parse_dailyco_response;
+use crate::Client;
 
 /// The recording object, representing a single saved recording, as described
 /// in <https://docs.daily.co/reference/rest-api/recordings/config>

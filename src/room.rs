@@ -1,9 +1,9 @@
 //! Definition and creation of `Daily` rooms.
-use crate::client::parse_dailyco_response;
-use crate::configuration::{DailyLang, RecordingType, Region, RtmpGeoRegion, SignalingImp};
-use crate::room_properties::RoomProperties;
-use crate::Client;
 use serde::{Deserialize, Serialize};
+
+use crate::client::parse_dailyco_response;
+use crate::room_properties::{RoomProperties, RoomPropertiesBuilder};
+use crate::Client;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -29,7 +29,8 @@ pub struct CreateRoom<'a> {
     name: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     privacy: Option<RoomPrivacy>,
-    properties: RoomPropertiesBuilder<'a>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    properties: Option<RoomPropertiesBuilder<'a>>,
 }
 
 impl<'a> CreateRoom<'a> {
@@ -52,178 +53,9 @@ impl<'a> CreateRoom<'a> {
         self
     }
 
-    /// UTC timestamp before which the room cannot be joined.
-    pub fn nbf(&mut self, nbf: i64) -> &mut Self {
-        self.properties.nbf = Some(nbf);
-        self
-    }
-
-    /// UTC timestamp for expiration of the room, after which
-    /// time it will be automatically deleted at some point.
-    pub fn exp(&mut self, exp: i64) -> &mut Self {
-        self.properties.exp = Some(exp);
-        self
-    }
-
-    /// Maximum number of participants who can enter the room.
-    pub fn max_participants(&mut self, max_participants: usize) -> &mut Self {
-        self.properties.max_participants = Some(max_participants);
-        self
-    }
-
-    /// Determines if `Daily Prebuilt` displays the People UI.
-    pub fn enable_people_ui(&mut self, enable_people_ui: bool) -> &mut Self {
-        self.properties.enable_people_ui = Some(enable_people_ui);
-        self
-    }
-
-    /// Sets whether the room can use `Daily Prebuilt's` Picture in Picture controls.
-    pub fn enable_pip_ui(&mut self, enable_pip_ui: bool) -> &mut Self {
-        self.properties.enable_pip_ui = Some(enable_pip_ui);
-        self
-    }
-
-    /// Determines whether participants enter a waiting room with a camera, mic, and
-    /// browser check before joining a call.
-    pub fn enable_prejoin_ui(&mut self, enable_prejoin_ui: bool) -> &mut Self {
-        self.properties.enable_prejoin_ui = Some(enable_prejoin_ui);
-        self
-    }
-
-    /// Determines whether the network button, and the network panel it reveals on click, appears in this room.
-    pub fn enable_network_ui(&mut self, enable_network_ui: bool) -> &mut Self {
-        self.properties.enable_network_ui = Some(enable_network_ui);
-        self
-    }
-
-    /// Turns on a lobby experience for private rooms. A participant without a corresponding
-    /// meeting token can request to be admitted to the meeting with a "knock", and wait
-    /// for the meeting owner to admit them.
-    pub fn enable_knocking(&mut self, enable_knocking: bool) -> &mut Self {
-        self.properties.enable_knocking = Some(enable_knocking);
-        self
-    }
-
-    /// Whether or not screen-sharing is enabled
-    pub fn enable_screenshare(&mut self, enable_screenshare: bool) -> &mut Self {
-        self.properties.enable_screenshare = Some(enable_screenshare);
-        self
-    }
-
-    /// Determines whether `Daily Prebuilt` displays background blur controls.
-    pub fn enable_video_processing_ui(&mut self, enable_video_processing_ui: bool) -> &mut Self {
-        self.properties.enable_video_processing_ui = Some(enable_video_processing_ui);
-        self
-    }
-
-    /// Allow adding chat to the call
-    pub fn enable_chat(&mut self, enable_chat: bool) -> &mut Self {
-        self.properties.enable_chat = Some(enable_chat);
-        self
-    }
-
-    /// Keep video off when room is joined
-    pub fn start_video_off(&mut self, start_video_off: bool) -> &mut Self {
-        self.properties.start_video_off = Some(start_video_off);
-        self
-    }
-
-    /// Keep audio off when room is joined
-    pub fn start_audio_off(&mut self, start_audio_off: bool) -> &mut Self {
-        self.properties.start_audio_off = Some(start_audio_off);
-        self
-    }
-
-    /// In `Daily Prebuilt`, only the meeting owners will be able to turn on camera,
-    /// unmute mic, and share screen
-    pub fn owner_only_broadcast(&mut self, owner_only_broadcast: bool) -> &mut Self {
-        self.properties.owner_only_broadcast = Some(owner_only_broadcast);
-        self
-    }
-
-    /// Allowed recording type for the room
-    pub fn enable_recording(&mut self, enable_recording: RecordingType) -> &mut Self {
-        self.properties.enable_recording = Some(enable_recording);
-        self
-    }
-
-    /// If there's a meeting going on at room exp time, end the meeting by kicking
-    /// everyone out. This behavior can be overridden by setting eject properties of
-    /// a meeting token.
-    pub fn eject_at_room_exp(&mut self, eject_at_room_exp: bool) -> &mut Self {
-        self.properties.eject_at_room_exp = Some(eject_at_room_exp);
-        self
-    }
-
-    /// Eject a meeting participant this many seconds after the participant joins the
-    /// meeting. You can use this is a default length limit to prevent long meetings.
-    /// This can be overridden by setting eject properties of a meeting token.
-    pub fn eject_after_elapsed(&mut self, eject_after_elapsed: i64) -> &mut Self {
-        self.properties.eject_after_elapsed = Some(eject_after_elapsed);
-        self
-    }
-
-    /// When enabled, non-owner users join a meeting with a hidden presence, meaning
-    /// they won't appear as a named participant in the meeting and have no participant
-    /// events associated to them.
-    pub fn enable_hidden_participants(&mut self, enable_hidden_participants: bool) -> &mut Self {
-        self.properties.enable_hidden_participants = Some(enable_hidden_participants);
-        self
-    }
-
-    /// Configures a room to use multiple SFUs for a call's media. This feature enables
-    /// calls to scale to large sizes and to reduce latency between participants.
-    /// It is recommended specifically for interactive live streaming.
-    pub fn enable_mesh_sfu(&mut self, enable_mesh_sfu: bool) -> &mut Self {
-        self.properties.enable_mesh_sfu = Some(enable_mesh_sfu);
-        self
-    }
-
-    /// Enables Daily Prebuilt to support group calls of up to 300 participants and
-    /// owner only broadcast calls of up to 15K participants.
-    pub fn experimental_optimize_large_calls(
-        &mut self,
-        experimental_optimize_large_calls: bool,
-    ) -> &mut Self {
-        self.properties.experimental_optimize_large_calls = Some(experimental_optimize_large_calls);
-        self
-    }
-
-    /// The default language of the Daily prebuilt video call UI, for this room.
-    pub fn lang(&mut self, lang: DailyLang) -> &mut Self {
-        self.properties.lang = Some(lang);
-        self
-    }
-
-    /// Sets a URL that will receive a webhook when a user joins a room.
-    /// Default is NULL. Character limit for webhook URL is 255.
-    pub fn meeting_join_hook(&mut self, meeting_join_hook: &'a str) -> &mut Self {
-        self.properties.meeting_join_hook = Some(meeting_join_hook);
-        self
-    }
-
-    /// Sets the signaling type.
-    pub fn signaling_imp(&mut self, signaling_imp: SignalingImp) -> &mut Self {
-        self.properties.signaling_imp = Some(signaling_imp);
-        self
-    }
-
-    /// Enforce a signaling server region
-    pub fn geo(&mut self, geo: Region) -> &mut Self {
-        self.properties.geo = Some(geo);
-        self
-    }
-
-    /// Used to select the region where an RTMP stream should originate.
-    pub fn rtmp_geo(&mut self, rtmp_geo: RtmpGeoRegion) -> &mut Self {
-        self.properties.rtmp_geo = Some(rtmp_geo);
-        self
-    }
-
-    /// Reduces the volume of log messages. This feature should be enabled when there
-    /// are more than 300 participants in a meeting to help improve performance.
-    pub fn enable_terse_logging(&mut self, enable_terse_logging: bool) -> &mut Self {
-        self.properties.enable_terse_logging = Some(enable_terse_logging);
+    /// Set the properties for this room
+    pub fn properties(&mut self, properties: RoomPropertiesBuilder<'a>) -> &mut Self {
+        self.properties = Some(properties);
         self
     }
 
@@ -234,16 +66,19 @@ impl<'a> CreateRoom<'a> {
     /// Create a private room with audio and video off by default:
     ///
     /// ```no_run
-    /// # use dailyco::{Client, Result};
+    /// # use dailyco::{Client, Result, RoomPropertiesBuilder};
     /// # use dailyco::room::{Room, CreateRoom, RoomPrivacy};
     /// # async fn run() -> Result<Room> {
     /// let client = Client::new("test-api-key")?;
     /// let created_room = CreateRoom::new()
-    ///   .privacy(RoomPrivacy::Private)
-    ///   .start_audio_off(true)
-    ///   .start_video_off(true)
-    ///   .send(&client)
-    ///   .await?;
+    ///     .privacy(RoomPrivacy::Private)
+    ///     .properties(
+    ///         RoomPropertiesBuilder::new()
+    ///             .start_audio_off(true)
+    ///             .start_video_off(true),
+    ///     )
+    ///     .send(&client)
+    ///     .await?;
     /// # Ok(created_room)
     /// # }
     /// ```
@@ -275,100 +110,62 @@ pub struct Room {
     pub config: RoomProperties,
 }
 
+/// An `UpdateRoom` can be used to update an existing `Daily` room.
 #[derive(Debug, Copy, Clone, Serialize, Default)]
-struct RoomPropertiesBuilder<'a> {
-    /// UTC timestamp before which the room cannot be joined
+pub struct UpdateRoom<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    nbf: Option<i64>,
-    /// UTC timestamp for expiration of the room, after which
-    /// time it will be automatically deleted at some point.
+    privacy: Option<RoomPrivacy>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    exp: Option<i64>,
-    /// Maximum number of participants who can enter the room.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    max_participants: Option<usize>,
-    /// Determines if Daily Prebuilt displays the People UI
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_people_ui: Option<bool>,
-    /// Sets whether the room can use Daily Prebuilt's Picture in Picture controls.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_pip_ui: Option<bool>,
-    /// Determines whether participants enter a waiting room with a camera, mic, and
-    /// browser check before joining a call.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_prejoin_ui: Option<bool>,
-    /// Determines whether the network button, and the network panel it reveals on click, appears in this room.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_network_ui: Option<bool>,
-    /// Turns on a lobby experience for private rooms. A participant without a corresponding
-    /// meeting token can request to be admitted to the meeting with a "knock", and wait
-    /// for the meeting owner to admit them.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_knocking: Option<bool>,
-    /// Whether or not screen-sharing is enabled
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_screenshare: Option<bool>,
-    /// Determines whether Daily Prebuilt displays background blur controls.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_video_processing_ui: Option<bool>,
-    /// Allow adding chat to the call
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_chat: Option<bool>,
-    /// Keep video off when room is joined
-    #[serde(skip_serializing_if = "Option::is_none")]
-    start_video_off: Option<bool>,
-    /// Keep audio off when room is joined
-    #[serde(skip_serializing_if = "Option::is_none")]
-    start_audio_off: Option<bool>,
-    /// In Daily Prebuilt, only the meeting owners will be able to turn on camera,
-    /// unmute mic, and share screen
-    #[serde(skip_serializing_if = "Option::is_none")]
-    owner_only_broadcast: Option<bool>,
-    /// Allowed recording type for the room
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_recording: Option<RecordingType>,
-    /// If there's a meeting going on at room exp time, end the meeting by kicking
-    /// everyone out. This behavior can be overridden by setting eject properties of
-    /// a meeting token.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    eject_at_room_exp: Option<bool>,
-    /// Eject a meeting participant this many seconds after the participant joins the
-    /// meeting. You can use this is a default length limit to prevent long meetings.
-    /// This can be overridden by setting eject properties of a meeting token.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    eject_after_elapsed: Option<i64>,
-    /// When enabled, non-owner users join a meeting with a hidden presence, meaning
-    /// they won't appear as a named participant in the meeting and have no participant
-    /// events associated to them.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_hidden_participants: Option<bool>,
-    /// Configures a room to use multiple SFUs for a call's media. This feature enables
-    /// calls to scale to large sizes and to reduce latency between participants.
-    /// It is recommended specifically for interactive live streaming.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_mesh_sfu: Option<bool>,
-    /// Enables Daily Prebuilt to support group calls of up to 300 participants and
-    /// owner only broadcast calls of up to 15K participants.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    experimental_optimize_large_calls: Option<bool>,
-    /// The default language of the Daily prebuilt video call UI, for this room.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    lang: Option<DailyLang>,
-    /// Sets a URL that will receive a webhook when a user joins a room.
-    /// Default is NULL. Character limit for webhook URL is 255.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    meeting_join_hook: Option<&'a str>,
-    /// Sets the signaling type.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    signaling_imp: Option<SignalingImp>,
-    /// Enforce a signaling server region
-    #[serde(skip_serializing_if = "Option::is_none")]
-    geo: Option<Region>,
-    /// Used to select the region where an RTMP stream should originate.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    rtmp_geo: Option<RtmpGeoRegion>,
-    /// Reduces the volume of log messages. This feature should be enabled when there
-    /// are more than 300 participants in a meeting to help improve performance.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    enable_terse_logging: Option<bool>,
+    properties: Option<RoomPropertiesBuilder<'a>>,
+}
+
+impl<'a> UpdateRoom<'a> {
+    /// Constructs a new `UpdateRoom`.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Update the visibility for the room.
+    pub fn privacy(&mut self, privacy: RoomPrivacy) -> &mut Self {
+        self.privacy = Some(privacy);
+        self
+    }
+
+    /// Update the properties for this room
+    pub fn properties(&mut self, properties: RoomPropertiesBuilder<'a>) -> &mut Self {
+        self.properties = Some(properties);
+        self
+    }
+
+    /// Make the request to update a `Daily` room.
+    ///
+    /// # Examples
+    ///
+    /// Create a private room with audio and video off by default:
+    ///
+    /// ```no_run
+    /// # use dailyco::{Client, Result, RoomPropertiesBuilder};
+    /// # use dailyco::room::{Room, UpdateRoom, RoomPrivacy};
+    /// # async fn run() -> Result<Room> {
+    /// let client = Client::new("test-api-key")?;
+    /// let existing_room_name = "existing_room";
+    /// let updated_room = UpdateRoom::new()
+    ///     .privacy(RoomPrivacy::Private)
+    ///     .properties(
+    ///         RoomPropertiesBuilder::new()
+    ///             .start_audio_off(true)
+    ///             .start_video_off(true),
+    ///     )
+    ///     .send(existing_room_name, &client)
+    ///     .await?;
+    /// # Ok(updated_room)
+    /// # }
+    /// ```
+    pub async fn send(&self, room_name: &str, client: &Client) -> crate::Result<Room> {
+        // This should not be able to fail
+        let room_url = client.base_url.join(&format!("rooms/{room_name}")).unwrap();
+        let resp = client.client.post(room_url).json(self).send().await?;
+        parse_dailyco_response(resp).await
+    }
 }

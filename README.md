@@ -20,6 +20,7 @@ generate a valid API key.
 ```rust,no_run
 use dailyco::meeting_token::CreateMeetingToken;
 use dailyco::room::{CreateRoom, RoomPrivacy};
+use dailyco::RoomPropertiesBuilder;
 
 #[tokio::main]
 async fn main() -> dailyco::Result<()> {
@@ -29,9 +30,12 @@ async fn main() -> dailyco::Result<()> {
     let created_room = CreateRoom::new()
         .name("my-test-room")
         .privacy(RoomPrivacy::Private)
-        .enable_screenshare(false)
-        .max_participants(20)
-        .start_audio_off(true)
+        .properties(
+          RoomPropertiesBuilder::new()
+           .enable_screenshare(false)
+           .max_participants(20)
+           .start_audio_off(true)
+          )
         .send(&client)
         .await?;
 

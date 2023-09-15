@@ -1,12 +1,7 @@
-use crate::helpers::get_daily_client;
 use dailyco::meeting_token::{CreateMeetingToken, MeetingToken};
 use dailyco::Client;
 
-#[cfg(feature = "self-signed-tokens")]
-pub fn get_domain_id_for_tests() -> String {
-    std::env::var("DAILY_CO_DOMAIN_ID")
-        .expect("Daily Domain Id required for testing self-signing meeting tokens")
-}
+use crate::helpers::get_daily_client;
 
 macro_rules! meeting_token {
     ( $( $field:ident = $value:expr ),* ) => {{
@@ -61,7 +56,7 @@ async fn meeting_tokens_self_sign_roundtrip() -> anyhow::Result<()> {
     let tokens = get_meeting_token_test_cases("a-room");
     let client = get_daily_client();
     let secret_key = crate::helpers::get_secret_key_for_tests();
-    let domain_id = get_domain_id_for_tests();
+    let domain_id = crate::helpers::get_domain_id_for_tests();
     for spec in tokens {
         let token = spec.self_sign(&domain_id, &secret_key);
         assert_meeting_token_generation_roundtrip(&client, &token, spec.clone()).await?;

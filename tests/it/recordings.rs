@@ -1,6 +1,7 @@
-use crate::helpers::{assert_not_found_err, get_daily_client};
 use dailyco::recording::{GetRecordingAccessLink, ListRecordings};
 use uuid::Uuid;
+
+use crate::helpers::{assert_not_found_err, get_daily_client};
 
 #[tokio::test]
 async fn get_recording_not_found() {
