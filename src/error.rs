@@ -1,4 +1,4 @@
-use std::fmt::{Formatter};
+use std::fmt::Formatter;
 
 use reqwest::Response;
 use serde::{Deserialize, Serialize};

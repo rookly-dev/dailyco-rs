@@ -1,4 +1,4 @@
 pub mod helpers;
-pub mod misc;
+pub mod recordings;
 pub mod rooms;
 pub mod tokens;

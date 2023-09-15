@@ -1,6 +1,7 @@
+use jsonwebtoken::{encode, EncodingKey, Header};
+
 use crate::configuration::{DailyLang, RecordingType};
 use crate::meeting_token::CreateMeetingToken;
-use jsonwebtoken::{encode, EncodingKey, Header};
 
 #[derive(serde::Serialize)]
 struct SelfSigningTokenPayload<'a> {

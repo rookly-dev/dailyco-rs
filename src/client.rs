@@ -52,7 +52,10 @@ impl Client {
     /// # use dailyco::{Client, Result};
     /// # fn main_fn() -> Result<Client> {
     /// let mock_server_addr = "http://localhost:8080";
-    /// let client = Client::with_endpoint("test-api-key", reqwest::Url::parse(mock_server_addr).unwrap())?;
+    /// let client = Client::with_endpoint(
+    ///     "test-api-key",
+    ///     reqwest::Url::parse(mock_server_addr).unwrap(),
+    /// )?;
     /// Ok(client)
     /// # }
     /// ```
@@ -108,9 +111,9 @@ impl Client {
     /// # async fn run() -> Result<()> {
     /// let client = Client::new("test-api-key")?;
     /// let token = CreateMeetingToken::new()
-    ///   .room_name("room-which-exists")
-    ///   .send(&client)
-    ///   .await?;
+    ///     .room_name("room-which-exists")
+    ///     .send(&client)
+    ///     .await?;
     /// let validated = client.get_meeting_token(&token).await?;
     /// assert_eq!(validated.room_name, Some("room-which-exists".to_string()));
     /// # Ok(())

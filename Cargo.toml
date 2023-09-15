@@ -35,6 +35,7 @@ anyhow = "1"
 chrono = {version = "0.4.19", default-features = false, features = ["clock"]}
 dotenv = "0.15.0"
 doc-comment = "0.3"
+nanoid = "0.4.0"
 
 [[example]]
 name = "basic"

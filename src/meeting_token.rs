@@ -1,9 +1,10 @@
 //! Definition and creation of `Daily` meeting tokens.
+use serde::{Deserialize, Serialize};
+
 use crate::client::parse_dailyco_response;
 use crate::configuration::{DailyLang, RecordingType};
 use crate::utils::default_as_true;
 use crate::Client;
-use serde::{Deserialize, Serialize};
 
 /// A `CreateMeetingToken` can be used to create a `Daily` meeting token for gaining
 /// access to a private room.
@@ -180,10 +181,10 @@ impl<'a> CreateMeetingToken<'a> {
     /// # async fn run() -> Result<String> {
     /// let client = Client::new("test-api-key")?;
     /// let token = CreateMeetingToken::new()
-    ///   .room_name("room-user-should-own")
-    ///   .is_owner(true)
-    ///   .send(&client)
-    ///   .await?;
+    ///     .room_name("room-user-should-own")
+    ///     .is_owner(true)
+    ///     .send(&client)
+    ///     .await?;
     /// # Ok(token)
     /// # }
     /// ```
@@ -227,9 +228,9 @@ impl<'a> CreateMeetingToken<'a> {
     /// # use dailyco::meeting_token::CreateMeetingToken;
     /// # fn run() -> String {
     /// let token = CreateMeetingToken::new()
-    ///   .room_name("room-user-should-own")
-    ///   .is_owner(true)
-    ///   .self_sign("domain_id", "test-api-key");
+    ///     .room_name("room-user-should-own")
+    ///     .is_owner(true)
+    ///     .self_sign("domain_id", "test-api-key");
     /// # token
     /// # }
     /// ```
