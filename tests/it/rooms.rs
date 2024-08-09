@@ -59,7 +59,7 @@ async fn get_room() {
             RoomPropertiesBuilder::new()
                 .eject_at_room_exp(true)
                 .max_participants(12)
-                .sfu_always(),
+                .sfu_switchover(1.),
         )
         .send(&client)
         .await
@@ -70,7 +70,7 @@ async fn get_room() {
     assert!(room.api_created);
     assert_eq!(room.config.max_participants, Some(12));
     assert!(room.config.eject_at_room_exp);
-    assert_eq!(room.config.sfu_switchover, Some(0.5));
+    assert_eq!(room.config.sfu_switchover, Some(1.));
 
     cleanup_room(&client, &room_name).await;
 }
@@ -81,14 +81,14 @@ async fn update_room() {
     let room = create_default_room(&client).await;
     let room_name = &room.name;
     UpdateRoom::new()
-        .properties(RoomPropertiesBuilder::new().sfu_always())
+        .properties(RoomPropertiesBuilder::new().sfu_switchover(2.))
         .send(room_name, &client)
         .await
         .unwrap();
     let room_after_update = client.get_room(&room_name).await.unwrap();
     assert_eq!(&room_after_update.name, room_name);
     assert_eq!(room_after_update.privacy, RoomPrivacy::Public);
-    assert_eq!(room_after_update.config.sfu_switchover, Some(0.5));
+    assert_eq!(room_after_update.config.sfu_switchover, Some(2.));
 
     cleanup_room(&client, &room_name).await;
 }
