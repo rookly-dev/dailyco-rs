@@ -98,6 +98,7 @@ pub struct RoomProperties {
     pub recordings_bucket: Option<RecordingsBucket>,
     /// Dictates the participant count after which room topology automatically
     /// switches from Peer-to-Peer (P2P) to Selective Forwarding Unit (SFU) mode, or vice versa.
+    /// Default is 0.5
     pub sfu_switchover: Option<f64>,
 }
 
@@ -412,7 +413,7 @@ impl<'a> RoomPropertiesBuilder<'a> {
     }
 
     /// Ensure the room always immediately switches to SFU. Equivalent to setting
-    /// `sfu_switchover` to 0.5
+    /// `sfu_switchover` to the default 0.5
     pub fn sfu_always(mut self) -> Self {
         self.sfu_switchover = Some(0.5);
         self
