@@ -16,7 +16,7 @@ macro_rules! meeting_token {
     }};
 }
 
-fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken> {
+fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken<'_>> {
     let mut builders = vec![
         meeting_token! { start_audio_off = true, user_name = "a_user", eject_after_elapsed = 50 },
         meeting_token! {
@@ -99,7 +99,7 @@ async fn meeting_tokens_self_sign_roundtrip() -> anyhow::Result<()> {
     let domain_id = crate::helpers::get_domain_id_for_tests();
     for spec in tokens {
         let token = spec.self_sign(&domain_id, &secret_key);
-        assert_meeting_token_generation_roundtrip(&client, &token, spec.clone()).await?;
+        assert_meeting_token_generation_roundtrip(&client, &token, spec).await?;
     }
     Ok(())
 }

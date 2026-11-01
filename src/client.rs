@@ -59,7 +59,7 @@ impl Client {
     /// # }
     /// ```
     pub fn with_endpoint<T: fmt::Display>(key: T, endpoint: Url) -> Result<Self> {
-        let mut header_val = HeaderValue::try_from(format!("Bearer {}", key))
+        let mut header_val = HeaderValue::try_from(format!("Bearer {key}"))
             .map_err(|_| Error::BadAPIKey("API key must include only ASCII characters"))?;
         header_val.set_sensitive(true);
 

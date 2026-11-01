@@ -31,7 +31,7 @@ pub fn assert_not_found_err<T: Debug>(resp: dailyco::Result<T>) {
                 DailyCoErrorKind::NotFound
             ))
         }
-        err => panic!("Expected not found error, found {}", err),
+        err => panic!("Expected not found error, found {err}"),
     }
 }
 

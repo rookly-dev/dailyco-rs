@@ -90,18 +90,13 @@ pub enum RecordingType {
 }
 
 /// Signaling type, seen in <https://docs.daily.co/reference/rest-api/rooms/config#signaling_imp>
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Default, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum SignalingImp {
     /// `ws` signaling type
+    #[default]
     Ws,
-}
-
-impl Default for SignalingImp {
-    fn default() -> Self {
-        Self::Ws
-    }
 }
 
 /// Configures an S3 bucket in which to store recordings.

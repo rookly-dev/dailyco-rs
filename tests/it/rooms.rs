@@ -86,12 +86,12 @@ async fn update_room() {
         .send(room_name, &client)
         .await
         .unwrap();
-    let room_after_update = client.get_room(&room_name).await.unwrap();
+    let room_after_update = client.get_room(room_name).await.unwrap();
     assert_eq!(&room_after_update.name, room_name);
     assert_eq!(room_after_update.privacy, RoomPrivacy::Public);
     assert_eq!(room_after_update.config.sfu_switchover, Some(2.));
 
-    cleanup_room(&client, &room_name).await;
+    cleanup_room(&client, room_name).await;
 }
 
 #[tokio::test]

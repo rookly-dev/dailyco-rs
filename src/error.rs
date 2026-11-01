@@ -23,8 +23,8 @@ impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Request(_) => f.write_str("failure making the request"),
-            Self::APIError(info) => write!(f, "daily request returned an error: {}", info),
-            Self::BadAPIKey(problem) => write!(f, "API key problem: {}", problem),
+            Self::APIError(info) => write!(f, "daily request returned an error: {info}"),
+            Self::BadAPIKey(problem) => write!(f, "API key problem: {problem}"),
             Self::RequiresPagination => {
                 f.write_str("Response requires pagination, which is not implemented yet.")
             }
@@ -105,10 +105,10 @@ pub struct DailyCoErrorInfo {
 impl std::fmt::Display for DailyCoErrorInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if let Some(error_kind) = self.error {
-            write!(f, "Error: {}", error_kind)?;
+            write!(f, "Error: {error_kind}")?;
         }
         if let Some(info) = &self.info {
-            write!(f, "Info: {}", info)
+            write!(f, "Info: {info}")
         } else {
             f.write_str("Info: Unspecified")
         }
