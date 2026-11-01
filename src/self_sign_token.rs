@@ -2,6 +2,7 @@ use jsonwebtoken::{encode, EncodingKey, Header};
 
 use crate::configuration::{DailyLang, RecordingType};
 use crate::meeting_token::CreateMeetingToken;
+use crate::permissions::Abbreviated;
 
 #[derive(serde::Serialize)]
 struct SelfSigningTokenPayload<'a> {
@@ -29,7 +30,7 @@ pub fn self_sign_token(config: CreateMeetingToken, domain_id: &str, secret_key: 
 // TODO: very duplicative, but seems not like not a better way when
 // essentially need to rename struct in 2 different ways. Definitely
 // could be cleaner with a proc macro
-#[derive(serde::Serialize, Copy, Clone)]
+#[derive(serde::Serialize, Clone)]
 struct MeetingTokenRenamed<'a> {
     #[serde(skip_serializing_if = "Option::is_none", rename = "r")]
     room_name: Option<&'a str>,
@@ -67,6 +68,8 @@ struct MeetingTokenRenamed<'a> {
     redirect_on_meeting_exit: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none", rename = "uil")]
     lang: Option<DailyLang>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "p")]
+    permissions: Option<Abbreviated>,
 }
 
 // Same as comment above with respect to duplication here being not great
@@ -91,6 +94,83 @@ impl<'a> From<CreateMeetingToken<'a>> for MeetingTokenRenamed<'a> {
             close_tab_on_exit: b.close_tab_on_exit,
             redirect_on_meeting_exit: b.redirect_on_meeting_exit,
             lang: b.lang,
+            permissions: b.permissions.map(Into::into),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use jsonwebtoken::{decode, DecodingKey, Validation};
+    use serde_json::json;
+
+    use crate::meeting_token::{
+        AdminKinds, CanAdmin, CanSend, CreateMeetingToken, MeetingTokenPermissions, SendKinds,
+    };
+
+    fn payload(builder: &CreateMeetingToken) -> serde_json::Value {
+        let token = builder.self_sign("domain-id", "secret");
+        let mut validation = Validation::default();
+        validation.required_spec_claims.clear();
+        decode(&token, &DecodingKey::from_secret(b"secret"), &validation)
+            .unwrap()
+            .claims
+    }
+
+    #[test]
+    fn signs_abbreviated_permissions() {
+        let hidden =
+            *CreateMeetingToken::new()
+                .start_video_off(true)
+                .permissions(MeetingTokenPermissions {
+                    has_presence: Some(false),
+                    can_send: Some(CanSend::Nothing),
+                    ..Default::default()
+                });
+        assert_eq!(
+            payload(&hidden),
+            json!({ "d": "domain-id", "vo": true, "p": { "hp": false, "cs": false } })
+        );
+
+        let subsets = *CreateMeetingToken::new().permissions(MeetingTokenPermissions {
+            can_send: Some(CanSend::Only(SendKinds {
+                video: true,
+                audio: true,
+                custom_audio: true,
+                ..Default::default()
+            })),
+            can_admin: Some(CanAdmin::Only(AdminKinds {
+                participants: true,
+                streaming: true,
+                ..Default::default()
+            })),
+            ..Default::default()
+        });
+        assert_eq!(
+            payload(&subsets),
+            json!({ "d": "domain-id", "p": { "cs": "v,a,ca", "ca": "p,s" } })
+        );
+
+        let all = *CreateMeetingToken::new().permissions(MeetingTokenPermissions {
+            has_presence: Some(true),
+            can_send: Some(CanSend::All),
+            can_admin: Some(CanAdmin::Nothing),
+        });
+        assert_eq!(
+            payload(&all),
+            json!({ "d": "domain-id", "p": { "hp": true, "cs": true, "ca": false } })
+        );
+
+        let empty_subset = *CreateMeetingToken::new().permissions(MeetingTokenPermissions {
+            can_send: Some(CanSend::Only(SendKinds::default())),
+            ..Default::default()
+        });
+        assert_eq!(
+            payload(&empty_subset),
+            json!({ "d": "domain-id", "p": { "cs": false } })
+        );
+
+        let owner = *CreateMeetingToken::new().is_owner(true);
+        assert_eq!(payload(&owner), json!({ "d": "domain-id", "o": true }));
     }
 }

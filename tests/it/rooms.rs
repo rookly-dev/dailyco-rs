@@ -1,14 +1,15 @@
 use dailyco::meeting_token::CreateMeetingToken;
 use dailyco::room::{CreateRoom, RoomPrivacy, UpdateRoom};
 use dailyco::RoomPropertiesBuilder;
-use nanoid::nanoid;
 
-use crate::helpers::{assert_not_found_err, cleanup_room, create_default_room, get_daily_client};
+use crate::helpers::{
+    assert_not_found_err, cleanup_room, create_default_room, get_daily_client, random_name,
+};
 
 #[tokio::test]
 async fn can_make_room() {
     let client = get_daily_client();
-    let room_name = nanoid!(8);
+    let room_name = random_name();
 
     let room = CreateRoom::new()
         .privacy(RoomPrivacy::Private)
@@ -40,7 +41,7 @@ async fn get_room_not_found() {
 #[tokio::test]
 async fn delete_room() {
     let client = get_daily_client();
-    let room_name = nanoid!(8);
+    let room_name = random_name();
     CreateRoom::new()
         .name(&room_name)
         .send(&client)
@@ -52,7 +53,7 @@ async fn delete_room() {
 #[tokio::test]
 async fn get_room() {
     let client = get_daily_client();
-    let room_name = nanoid!(8);
+    let room_name = random_name();
     CreateRoom::new()
         .name(&room_name)
         .properties(
@@ -85,12 +86,12 @@ async fn update_room() {
         .send(room_name, &client)
         .await
         .unwrap();
-    let room_after_update = client.get_room(&room_name).await.unwrap();
+    let room_after_update = client.get_room(room_name).await.unwrap();
     assert_eq!(&room_after_update.name, room_name);
     assert_eq!(room_after_update.privacy, RoomPrivacy::Public);
     assert_eq!(room_after_update.config.sfu_switchover, Some(2.));
 
-    cleanup_room(&client, &room_name).await;
+    cleanup_room(&client, room_name).await;
 }
 
 #[tokio::test]
@@ -117,4 +118,37 @@ async fn make_meeting_token() {
         .await
         .unwrap();
     cleanup_room(&client, &room.name).await;
+}
+
+#[tokio::test]
+async fn large_room_properties() {
+    // Interactive live streaming: a few owners send, everyone else joins hidden. Large
+    // rooms also raise `max_participants`, which the test domain's plan doesn't allow.
+    let properties = || {
+        RoomPropertiesBuilder::new()
+            .enable_hidden_participants(true)
+            .enable_mesh_sfu(true)
+            .enable_terse_logging(true)
+    };
+    let client = get_daily_client();
+
+    let created = CreateRoom::new()
+        .properties(properties())
+        .send(&client)
+        .await
+        .unwrap();
+    let updated = create_default_room(&client).await;
+    UpdateRoom::new()
+        .properties(properties())
+        .send(&updated.name, &client)
+        .await
+        .unwrap();
+
+    for room_name in [&created.name, &updated.name] {
+        let config = client.get_room(room_name).await.unwrap().config;
+        assert!(config.enable_hidden_participants);
+        assert_eq!(config.enable_mesh_sfu, Some(true));
+        assert!(config.enable_terse_logging);
+        cleanup_room(&client, room_name).await;
+    }
 }

@@ -1,4 +1,7 @@
-use dailyco::meeting_token::{CreateMeetingToken, MeetingToken};
+use dailyco::meeting_token::{
+    AdminKinds, CanAdmin, CanSend, CreateMeetingToken, MeetingToken, MeetingTokenPermissions,
+    SendKinds,
+};
 use dailyco::Client;
 
 use crate::helpers::get_daily_client;
@@ -13,7 +16,7 @@ macro_rules! meeting_token {
     }};
 }
 
-fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken> {
+fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken<'_>> {
     let mut builders = vec![
         meeting_token! { start_audio_off = true, user_name = "a_user", eject_after_elapsed = 50 },
         meeting_token! {
@@ -32,6 +35,43 @@ fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken> {
             close_tab_on_exit = true,
             lang = dailyco::configuration::DailyLang::Es
         },
+        // Hidden viewer in a large room
+        meeting_token! {
+            user_id = "viewer",
+            start_video_off = true,
+            start_audio_off = true,
+            permissions = MeetingTokenPermissions {
+                has_presence: Some(false),
+                can_send: Some(CanSend::Nothing),
+                ..Default::default()
+            }
+        },
+        meeting_token! {
+            user_id = "participant",
+            permissions = MeetingTokenPermissions {
+                has_presence: Some(true),
+                can_send: Some(CanSend::Only(SendKinds {
+                    video: true,
+                    audio: true,
+                    ..Default::default()
+                })),
+                can_admin: Some(CanAdmin::All),
+            }
+        },
+        // Custom tracks, and an empty subset that Daily stores as `false`
+        meeting_token! {
+            permissions = MeetingTokenPermissions {
+                can_send: Some(CanSend::Only(SendKinds {
+                    screen_video: true,
+                    custom_video: true,
+                    ..Default::default()
+                })),
+                can_admin: Some(CanAdmin::Only(AdminKinds::default())),
+                ..Default::default()
+            }
+        },
+        // Owner without permissions, so no `permissions` in the token
+        meeting_token! { user_id = "owner", is_owner = true },
     ];
     builders.iter_mut().for_each(|b| {
         b.room_name(room_name);
@@ -59,7 +99,7 @@ async fn meeting_tokens_self_sign_roundtrip() -> anyhow::Result<()> {
     let domain_id = crate::helpers::get_domain_id_for_tests();
     for spec in tokens {
         let token = spec.self_sign(&domain_id, &secret_key);
-        assert_meeting_token_generation_roundtrip(&client, &token, spec.clone()).await?;
+        assert_meeting_token_generation_roundtrip(&client, &token, spec).await?;
     }
     Ok(())
 }

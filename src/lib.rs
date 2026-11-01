@@ -6,6 +6,7 @@ mod client;
 pub mod configuration;
 mod error;
 pub mod meeting_token;
+mod permissions;
 pub mod room;
 mod room_properties;
 

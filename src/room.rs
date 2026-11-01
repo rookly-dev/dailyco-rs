@@ -5,21 +5,16 @@ use crate::client::parse_dailyco_response;
 use crate::room_properties::{RoomProperties, RoomPropertiesBuilder};
 use crate::Client;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Default, Serialize, Deserialize, Eq, PartialEq)]
 #[serde(rename_all = "lowercase")]
 /// Possibilities for video room visibility.
 pub enum RoomPrivacy {
     /// Public room (anyone can join)
+    // Matching dailyco default
+    #[default]
     Public,
     /// Private room (need token to join, or owner approval)
     Private,
-}
-
-impl Default for RoomPrivacy {
-    fn default() -> Self {
-        // Matching dailyco default
-        Self::Public
-    }
 }
 
 /// A `CreateRoom` can be used to create a `Daily` room with custom configuration.

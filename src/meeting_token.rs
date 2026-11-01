@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::client::parse_dailyco_response;
 use crate::configuration::{DailyLang, RecordingType};
+pub use crate::permissions::{
+    AdminKinds, Allowed, CanAdmin, CanSend, MeetingTokenPermissions, SendKinds,
+};
 use crate::utils::default_as_true;
 use crate::Client;
 
@@ -46,6 +49,11 @@ pub struct CreateMeetingToken<'a> {
     pub(crate) redirect_on_meeting_exit: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) lang: Option<DailyLang>,
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "crate::permissions::serialize_rest"
+    )]
+    pub(crate) permissions: Option<MeetingTokenPermissions>,
 }
 
 impl<'a> CreateMeetingToken<'a> {
@@ -169,6 +177,35 @@ impl<'a> CreateMeetingToken<'a> {
         self
     }
 
+    /// Initial permissions for a participant who isn't a meeting owner. Unset fields fall
+    /// back to the room's, then the domain's, permissions.
+    ///
+    /// # Examples
+    ///
+    /// Create a token for a hidden participant who can't send media.
+    ///
+    /// ```no_run
+    /// # use dailyco::{Client, Result};
+    /// # use dailyco::meeting_token::{CanSend, CreateMeetingToken, MeetingTokenPermissions};
+    /// # async fn run() -> Result<String> {
+    /// let client = Client::new("test-api-key")?;
+    /// let token = CreateMeetingToken::new()
+    ///     .room_name("large-room")
+    ///     .permissions(MeetingTokenPermissions {
+    ///         has_presence: Some(false),
+    ///         can_send: Some(CanSend::Nothing),
+    ///         ..Default::default()
+    ///     })
+    ///     .send(&client)
+    ///     .await?;
+    /// # Ok(token)
+    /// # }
+    /// ```
+    pub fn permissions(&mut self, permissions: MeetingTokenPermissions) -> &mut Self {
+        self.permissions = Some(permissions.normalized());
+        self
+    }
+
     /// Make the request to create the custom `Daily` meeting token for joining a room.
     ///
     /// # Examples
@@ -214,7 +251,7 @@ impl<'a> CreateMeetingToken<'a> {
     #[cfg(feature = "self-signed-tokens")]
     #[cfg_attr(docsrs, doc(cfg(feature = "self-signed-tokens")))]
     /// Self-sign a `Daily` meeting token corresponding to this configuration,
-    /// skipping the round-trip required by [create](#method.create).
+    /// skipping the round-trip required by [`send`](Self::send).
     ///
     /// # Optional
     ///
@@ -293,6 +330,12 @@ pub struct MeetingToken {
     pub redirect_on_meeting_exit: Option<String>,
     /// The default language of the Daily prebuilt video call UI, for this room.
     pub lang: Option<DailyLang>,
+    /// Initial permissions for a participant who isn't a meeting owner.
+    #[serde(
+        default,
+        deserialize_with = "crate::permissions::deserialize_abbreviated"
+    )]
+    pub permissions: Option<MeetingTokenPermissions>,
 }
 
 fn option_str_to_string(str: Option<&str>) -> Option<String> {
@@ -320,6 +363,7 @@ impl From<CreateMeetingToken<'_>> for MeetingToken {
             close_tab_on_exit: builder.close_tab_on_exit.unwrap_or_default(),
             redirect_on_meeting_exit: option_str_to_string(builder.redirect_on_meeting_exit),
             lang: builder.lang,
+            permissions: builder.permissions,
         }
     }
 }

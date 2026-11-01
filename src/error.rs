@@ -2,26 +2,49 @@ use std::fmt::Formatter;
 
 use reqwest::Response;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 /// A `Result` alias where the `Err` case is `dailyco::Error`.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// The possible errors when making requests to `Daily`.
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub enum Error {
     /// Error related processing the request.
-    #[error("failure making the request")]
-    Request(#[from] reqwest::Error),
+    Request(reqwest::Error),
     /// Error reported by `Daily`.
-    #[error("daily request returned an error: {0}")]
     APIError(DailyCoErrorInfo),
     /// Invalid API key.
-    #[error("API key problem: {0}")]
     BadAPIKey(&'static str),
     /// Request which requires pagination to return full result, unimplemented.
-    #[error("Response requires pagination, which is not implemented yet.")]
     RequiresPagination,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Request(_) => f.write_str("failure making the request"),
+            Self::APIError(info) => write!(f, "daily request returned an error: {info}"),
+            Self::BadAPIKey(problem) => write!(f, "API key problem: {problem}"),
+            Self::RequiresPagination => {
+                f.write_str("Response requires pagination, which is not implemented yet.")
+            }
+        }
+    }
+}
+
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Request(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl From<reqwest::Error> for Error {
+    fn from(err: reqwest::Error) -> Self {
+        Self::Request(err)
+    }
 }
 
 impl Error {
@@ -82,10 +105,10 @@ pub struct DailyCoErrorInfo {
 impl std::fmt::Display for DailyCoErrorInfo {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if let Some(error_kind) = self.error {
-            write!(f, "Error: {}", error_kind)?;
+            write!(f, "Error: {error_kind}")?;
         }
         if let Some(info) = &self.info {
-            write!(f, "Info: {}", info)
+            write!(f, "Info: {info}")
         } else {
             f.write_str("Info: Unspecified")
         }
