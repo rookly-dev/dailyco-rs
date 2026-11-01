@@ -19,7 +19,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 reqwest = { version = "0.12.5", features = ["json"], default-features = false }
 serde = { version = "1", features = ["derive"] }
 jsonwebtoken = { version = "9.3.0", optional = true, default-features = false }
-uuid = { version = "1.1", default-features = false, features = ["std", "v4", "serde"] }
+uuid = { version = "1.1", default-features = false, features = ["std", "serde"] }
 
 [features]
 default = ["reqwest/default-tls"]
@@ -33,10 +33,10 @@ self-signed-tokens = ["jsonwebtoken"]
 tokio = { version = "1.0", default-features = false, features = ["macros", "rt-multi-thread"] }
 anyhow = "1"
 chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
-dotenv = "0.15.0"
+dotenvy = "0.15.7"
 doc-comment = "0.3"
-nanoid = "0.4.0"
 serde_json = "1"
+uuid = { version = "1.1", default-features = false, features = ["v4"] }
 
 [[example]]
 name = "basic"
