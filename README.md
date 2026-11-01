@@ -52,14 +52,24 @@ async fn main() -> dailyco::Result<()> {
 
 ## Installation
 
-The `dailyco` client is just a thin wrapper around a `reqwest::Client`. Because of this,
-in future we aim to add a feature set which forwards relevant features to `reqwest`. For
-now,
-
 ```toml
 [dependencies]
-dailyco = { version = "0.1.0" }
+dailyco = "0.8"
 ```
+
+Requires Rust 1.88 or newer.
+
+### Features
+
+The `dailyco` client is a thin wrapper around a `reqwest::Client`, so the TLS features
+forward to `reqwest`.
+
+- `default`: `reqwest`'s default TLS.
+- `rustls-tls-webpki-roots` / `rustls-tls-native-roots`: `rustls` with the webpki or
+  native root certificates. Disable default features when using these.
+- `self-signed-tokens`: sign meeting tokens locally with `CreateMeetingToken::self_sign`
+  instead of requesting them from `Daily`. Uses `jsonwebtoken` with the `aws-lc-rs`
+  crypto backend.
 
 
 
