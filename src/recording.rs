@@ -1,6 +1,5 @@
 //! Functionality related to `Daily` recordings.
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::client::parse_dailyco_response;
 use crate::Client;
@@ -11,7 +10,7 @@ use crate::Client;
 pub struct RecordingObject {
     /// A unique, opaque ID for this object. You can use this ID in API calls,
     /// and in paginated list operations.
-    pub id: Uuid,
+    pub id: String,
     /// The name of the room.
     pub room_name: String,
     /// When the recording started. This is a unix timestamp (seconds since the epoch).
@@ -27,7 +26,7 @@ pub struct RecordingObject {
     pub s3key: String,
     #[serde(rename = "mtgSessionId")]
     /// The meeting session ID for this recording.
-    pub meeting_session_id: Uuid,
+    pub meeting_session_id: String,
 }
 
 /// The status of a recording.
@@ -77,7 +76,7 @@ impl GetRecordingAccessLink {
     }
 
     /// Send the request to create and get an access link for a recording.
-    pub async fn send(&self, client: &Client, id: Uuid) -> crate::Result<RecordingAccessLink> {
+    pub async fn send(&self, client: &Client, id: &str) -> crate::Result<RecordingAccessLink> {
         let url = format!("{}/recordings/{id}/access-link", client.base_url);
         let resp = client.client.get(url).query(self).send().await?;
         parse_dailyco_response(resp).await
@@ -100,8 +99,8 @@ pub struct ListedRecordings {
 #[derive(Debug, Copy, Clone, Serialize, Default)]
 pub struct ListRecordings<'a> {
     limit: Option<u32>,
-    ending_before: Option<Uuid>,
-    starting_after: Option<Uuid>,
+    ending_before: Option<&'a str>,
+    starting_after: Option<&'a str>,
     room_name: Option<&'a str>,
 }
 
@@ -120,14 +119,14 @@ impl<'a> ListRecordings<'a> {
     }
 
     /// The `ending_before` argument is used to fetch previous pages of results.
-    pub fn ending_before(&mut self, ending_before: Uuid) -> &mut Self {
+    pub fn ending_before(&mut self, ending_before: &'a str) -> &mut Self {
         self.ending_before = Some(ending_before);
         self
     }
 
     /// The `starting_after` argument sets the starting point of the page and is used to
     /// fetch "subsequent" pages of results.
-    pub fn starting_after(&mut self, starting_after: Uuid) -> &mut Self {
+    pub fn starting_after(&mut self, starting_after: &'a str) -> &mut Self {
         self.starting_after = Some(starting_after);
         self
     }

@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::hash::{BuildHasher, RandomState};
 
 use dailyco::room::{CreateRoom, Room};
 use dailyco::{Client, DailyCoErrorKind, Error};
@@ -14,6 +15,12 @@ pub fn get_domain_id_for_tests() -> String {
     dotenvy::dotenv().unwrap();
     std::env::var("TEST_DOMAIN_ID")
         .expect("Daily Domain Id required for testing self-signing meeting tokens")
+}
+
+/// A random name, for test rooms. `RandomState` is randomly seeded, so this needs no
+/// extra dependencies.
+pub fn random_name() -> String {
+    format!("{:016x}", RandomState::new().hash_one(()))
 }
 
 pub fn assert_not_found_err<T: Debug>(resp: dailyco::Result<T>) {

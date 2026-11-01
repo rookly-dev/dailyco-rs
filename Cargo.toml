@@ -2,7 +2,7 @@
 name = "dailyco"
 version = "0.8.0"
 edition = "2021"
-rust-version = "1.89"
+rust-version = "1.88"
 categories = ["api-bindings"]
 readme = "README.md"
 repository = "https://github.com/rookly-dev/dailyco-rs"
@@ -19,7 +19,6 @@ rustdoc-args = ["--cfg", "docsrs"]
 reqwest = { version = "0.12.5", features = ["json"], default-features = false }
 serde = { version = "1", features = ["derive"] }
 jsonwebtoken = { version = "9.3.0", optional = true, default-features = false }
-uuid = { version = "1.1", default-features = false, features = ["std", "serde"] }
 
 [features]
 default = ["reqwest/default-tls"]
@@ -36,7 +35,6 @@ chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 dotenvy = "0.15.7"
 doc-comment = "0.3"
 serde_json = "1"
-uuid = { version = "1.1", default-features = false, features = ["v4"] }
 
 [[example]]
 name = "basic"

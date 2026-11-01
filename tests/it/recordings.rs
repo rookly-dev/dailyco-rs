@@ -1,13 +1,14 @@
 use dailyco::recording::{GetRecordingAccessLink, ListRecordings};
-use uuid::Uuid;
 
 use crate::helpers::{assert_not_found_err, get_daily_client};
+
+const MISSING_RECORDING_ID: &str = "00000000-0000-0000-0000-000000000000";
 
 #[tokio::test]
 async fn get_recording_not_found() {
     let client = get_daily_client();
 
-    let res = client.get_recording(Uuid::new_v4()).await;
+    let res = client.get_recording(MISSING_RECORDING_ID).await;
     assert_not_found_err(res);
 }
 
@@ -15,7 +16,7 @@ async fn get_recording_not_found() {
 async fn delete_recording_not_found() {
     let client = get_daily_client();
 
-    let res = client.delete_recording(Uuid::new_v4()).await;
+    let res = client.delete_recording(MISSING_RECORDING_ID).await;
     assert_not_found_err(res);
 }
 
@@ -24,7 +25,7 @@ async fn get_recording_access_link_not_found() {
     let client = get_daily_client();
     let res = GetRecordingAccessLink::new()
         .valid_for_secs(5000)
-        .send(&client, Uuid::new_v4())
+        .send(&client, MISSING_RECORDING_ID)
         .await;
     assert_not_found_err(res);
 }

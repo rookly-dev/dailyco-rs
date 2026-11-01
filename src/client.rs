@@ -4,7 +4,6 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, Url};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
-use uuid::Uuid;
 
 use crate::meeting_token::MeetingToken;
 use crate::recording::RecordingObject;
@@ -167,7 +166,7 @@ impl Client {
     /// Get information about a specific recording.
     ///
     /// <https://docs.daily.co/reference/rest-api/recordings/get-recording-information>
-    pub async fn get_recording(&self, id: Uuid) -> Result<RecordingObject> {
+    pub async fn get_recording(&self, id: &str) -> Result<RecordingObject> {
         let url = format!("{}/recordings/{id}", self.base_url);
         let resp = self.client.get(url).send().await?;
         let data: RecordingObject = parse_dailyco_response(resp).await?;
@@ -177,7 +176,7 @@ impl Client {
     /// Delete a specific recording
     ///
     /// <https://docs.daily.co/reference/rest-api/recordings/delete-recording>
-    pub async fn delete_recording(&self, id: Uuid) -> Result<()> {
+    pub async fn delete_recording(&self, id: &str) -> Result<()> {
         let url = format!("{}/recordings/{id}", self.base_url);
         let resp = self.client.delete(url).send().await?;
         if resp.status().is_success() {

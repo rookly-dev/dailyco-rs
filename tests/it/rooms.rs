@@ -1,14 +1,15 @@
 use dailyco::meeting_token::CreateMeetingToken;
 use dailyco::room::{CreateRoom, RoomPrivacy, UpdateRoom};
 use dailyco::RoomPropertiesBuilder;
-use uuid::Uuid;
 
-use crate::helpers::{assert_not_found_err, cleanup_room, create_default_room, get_daily_client};
+use crate::helpers::{
+    assert_not_found_err, cleanup_room, create_default_room, get_daily_client, random_name,
+};
 
 #[tokio::test]
 async fn can_make_room() {
     let client = get_daily_client();
-    let room_name = Uuid::new_v4().to_string();
+    let room_name = random_name();
 
     let room = CreateRoom::new()
         .privacy(RoomPrivacy::Private)
@@ -40,7 +41,7 @@ async fn get_room_not_found() {
 #[tokio::test]
 async fn delete_room() {
     let client = get_daily_client();
-    let room_name = Uuid::new_v4().to_string();
+    let room_name = random_name();
     CreateRoom::new()
         .name(&room_name)
         .send(&client)
@@ -52,7 +53,7 @@ async fn delete_room() {
 #[tokio::test]
 async fn get_room() {
     let client = get_daily_client();
-    let room_name = Uuid::new_v4().to_string();
+    let room_name = random_name();
     CreateRoom::new()
         .name(&room_name)
         .properties(
