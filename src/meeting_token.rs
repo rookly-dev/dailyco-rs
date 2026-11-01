@@ -251,7 +251,7 @@ impl<'a> CreateMeetingToken<'a> {
     #[cfg(feature = "self-signed-tokens")]
     #[cfg_attr(docsrs, doc(cfg(feature = "self-signed-tokens")))]
     /// Self-sign a `Daily` meeting token corresponding to this configuration,
-    /// skipping the round-trip required by [create](#method.create).
+    /// skipping the round-trip required by [`send`](Self::send).
     ///
     /// # Optional
     ///
