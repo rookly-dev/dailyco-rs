@@ -118,3 +118,36 @@ async fn make_meeting_token() {
         .unwrap();
     cleanup_room(&client, &room.name).await;
 }
+
+#[tokio::test]
+async fn large_room_properties() {
+    // Interactive live streaming: a few owners send, everyone else joins hidden. Large
+    // rooms also raise `max_participants`, which the test domain's plan doesn't allow.
+    let properties = || {
+        RoomPropertiesBuilder::new()
+            .enable_hidden_participants(true)
+            .enable_mesh_sfu(true)
+            .enable_terse_logging(true)
+    };
+    let client = get_daily_client();
+
+    let created = CreateRoom::new()
+        .properties(properties())
+        .send(&client)
+        .await
+        .unwrap();
+    let updated = create_default_room(&client).await;
+    UpdateRoom::new()
+        .properties(properties())
+        .send(&updated.name, &client)
+        .await
+        .unwrap();
+
+    for room_name in [&created.name, &updated.name] {
+        let config = client.get_room(room_name).await.unwrap().config;
+        assert!(config.enable_hidden_participants);
+        assert_eq!(config.enable_mesh_sfu, Some(true));
+        assert!(config.enable_terse_logging);
+        cleanup_room(&client, room_name).await;
+    }
+}

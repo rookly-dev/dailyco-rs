@@ -1,5 +1,6 @@
 use dailyco::meeting_token::{
-    CanAdmin, CanSend, CreateMeetingToken, MeetingToken, MeetingTokenPermissions, SendKinds,
+    AdminKinds, CanAdmin, CanSend, CreateMeetingToken, MeetingToken, MeetingTokenPermissions,
+    SendKinds,
 };
 use dailyco::Client;
 
@@ -55,6 +56,18 @@ fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken> {
                     ..Default::default()
                 })),
                 can_admin: Some(CanAdmin::All),
+            }
+        },
+        // Custom tracks, and an empty subset that Daily stores as `false`
+        meeting_token! {
+            permissions = MeetingTokenPermissions {
+                can_send: Some(CanSend::Only(SendKinds {
+                    screen_video: true,
+                    custom_video: true,
+                    ..Default::default()
+                })),
+                can_admin: Some(CanAdmin::Only(AdminKinds::default())),
+                ..Default::default()
             }
         },
         // Owner without permissions, so no `permissions` in the token

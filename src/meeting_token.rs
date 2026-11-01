@@ -3,7 +3,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::client::parse_dailyco_response;
 use crate::configuration::{DailyLang, RecordingType};
-pub use crate::permissions::{AdminKinds, CanAdmin, CanSend, MeetingTokenPermissions, SendKinds};
+pub use crate::permissions::{
+    AdminKinds, Allowed, CanAdmin, CanSend, MeetingTokenPermissions, SendKinds,
+};
 use crate::utils::default_as_true;
 use crate::Client;
 
@@ -47,7 +49,10 @@ pub struct CreateMeetingToken<'a> {
     pub(crate) redirect_on_meeting_exit: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) lang: Option<DailyLang>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(
+        skip_serializing_if = "Option::is_none",
+        serialize_with = "crate::permissions::serialize_rest"
+    )]
     pub(crate) permissions: Option<MeetingTokenPermissions>,
 }
 
@@ -197,7 +202,7 @@ impl<'a> CreateMeetingToken<'a> {
     /// # }
     /// ```
     pub fn permissions(&mut self, permissions: MeetingTokenPermissions) -> &mut Self {
-        self.permissions = Some(permissions);
+        self.permissions = Some(permissions.normalized());
         self
     }
 
@@ -326,6 +331,10 @@ pub struct MeetingToken {
     /// The default language of the Daily prebuilt video call UI, for this room.
     pub lang: Option<DailyLang>,
     /// Initial permissions for a participant who isn't a meeting owner.
+    #[serde(
+        default,
+        deserialize_with = "crate::permissions::deserialize_abbreviated"
+    )]
     pub permissions: Option<MeetingTokenPermissions>,
 }
 
