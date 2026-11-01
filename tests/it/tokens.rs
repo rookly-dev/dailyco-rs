@@ -1,4 +1,6 @@
-use dailyco::meeting_token::{CreateMeetingToken, MeetingToken};
+use dailyco::meeting_token::{
+    CanAdmin, CanSend, CreateMeetingToken, MeetingToken, MeetingTokenPermissions, SendKinds,
+};
 use dailyco::Client;
 
 use crate::helpers::get_daily_client;
@@ -32,6 +34,31 @@ fn get_meeting_token_test_cases(room_name: &str) -> Vec<CreateMeetingToken> {
             close_tab_on_exit = true,
             lang = dailyco::configuration::DailyLang::Es
         },
+        // Hidden viewer in a large room
+        meeting_token! {
+            user_id = "viewer",
+            start_video_off = true,
+            start_audio_off = true,
+            permissions = MeetingTokenPermissions {
+                has_presence: Some(false),
+                can_send: Some(CanSend::Nothing),
+                ..Default::default()
+            }
+        },
+        meeting_token! {
+            user_id = "participant",
+            permissions = MeetingTokenPermissions {
+                has_presence: Some(true),
+                can_send: Some(CanSend::Only(SendKinds {
+                    video: true,
+                    audio: true,
+                    ..Default::default()
+                })),
+                can_admin: Some(CanAdmin::All),
+            }
+        },
+        // Owner without permissions, so no `permissions` in the token
+        meeting_token! { user_id = "owner", is_owner = true },
     ];
     builders.iter_mut().for_each(|b| {
         b.room_name(room_name);
